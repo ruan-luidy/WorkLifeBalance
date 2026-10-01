@@ -199,6 +199,7 @@
             HorizontalAlignment="Left"
             VerticalAlignment="Bottom"
             Cursor="Hand"
+            FocusVisualStyle="{x:Null}"
             Checked="OnCollapseToggleChecked"
             IsChecked="True"
             ToolTip="Show / hide"

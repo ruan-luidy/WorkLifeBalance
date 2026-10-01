@@ -77,7 +77,8 @@ namespace WorkLifeBalance.Shell
             _lastFrame = now;
             UpdateMesh(Ease(_progress));
 
-            if (_progress is > 0 and < 1)
+            var finished = _direction > 0 ? _progress >= 1 : _progress <= 0;
+            if (!finished)
                 return;
 
             CompositionTarget.Rendering -= OnRendering;
