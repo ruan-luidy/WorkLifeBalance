@@ -173,6 +173,9 @@ namespace WorkLifeBalance.Shell
             }
 
             _mesh.Positions = positions;
+
+            // Fades out at the end so nothing sticks out of the round target
+            _viewport.Opacity = 1 - Ease(Math.Clamp((progress - 0.7) / 0.3, 0, 1));
         }
 
         private static double Lerp(double from, double to, double amount) => from + (to - from) * amount;

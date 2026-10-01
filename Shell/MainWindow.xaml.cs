@@ -54,8 +54,13 @@ namespace WorkLifeBalance.Shell
 
         private void OnCollapseToggleChecked(object sender, RoutedEventArgs e) => _genie?.Expand(ToggleBounds());
 
-        private Rect ToggleBounds() =>
-            new(CollapseToggle.TranslatePoint(new Point(), Root), new Size(CollapseToggle.ActualWidth, CollapseToggle.ActualHeight));
+        // A small square in the middle of the button, so the content goes behind the circle
+        private Rect ToggleBounds()
+        {
+            var center = CollapseToggle.TranslatePoint(new Point(CollapseToggle.ActualWidth / 2, CollapseToggle.ActualHeight / 2), Root);
+            var size = CollapseToggle.ActualWidth * 0.35;
+            return new Rect(center.X - size / 2, center.Y - size / 2, size, size);
+        }
 
         private void HideWindow(object sender, RoutedEventArgs e)
         {
