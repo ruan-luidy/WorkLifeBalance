@@ -74,7 +74,7 @@ namespace WorkLifeBalance.Features.Statistics
             _dataStorage = dataStorage;
             _secondWindowService = secondWindowService;
             PageWidth = 640;
-            PageHeight = 490;
+            PageHeight = 440;
             PageName = "View Data";
             _ = CalculateData();
         }

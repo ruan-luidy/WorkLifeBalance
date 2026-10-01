@@ -50,7 +50,7 @@
                         Content="All days"
                         Style="{StaticResource ToolbarButton}" />
                 </Grid>
-                <UniformGrid Columns="2">
+                <UniformGrid VerticalAlignment="Top" Columns="2">
                     <StackPanel ToolTip="The day you worked the most, and the work amount">
                         <TextBlock Style="{StaticResource StatLabel}" Text="MOST WORKED" />
                         <TextBlock Style="{StaticResource StatValue}" Text="{Binding RecordMostWorked, Converter={StaticResource TimeOnlyToStringConverter}}" />
@@ -75,7 +75,7 @@
                         Content="Days"
                         Style="{StaticResource ToolbarButton}" />
                 </Grid>
-                <UniformGrid Columns="2">
+                <UniformGrid VerticalAlignment="Top" Columns="2">
                     <StackPanel Style="{StaticResource Stat}" ToolTip="Previous Month Work Ratio, the average amount of work divided by 24 hours">
                         <TextBlock Style="{StaticResource StatLabel}" Text="WORK RATIO" />
                         <TextBlock Style="{StaticResource StatValue}" Text="{Binding PreviousMonthWorkRestRatio}" />
@@ -115,7 +115,7 @@
                         Content="Days"
                         Style="{StaticResource ToolbarButton}" />
                 </Grid>
-                <UniformGrid Columns="2">
+                <UniformGrid VerticalAlignment="Top" Columns="2">
                     <StackPanel Style="{StaticResource Stat}" ToolTip="Current Month Work Ratio, the average amount of work divided by 24 hours">
                         <TextBlock Style="{StaticResource StatLabel}" Text="WORK RATIO" />
                         <TextBlock Style="{StaticResource StatValue}" Text="{Binding CurrentMonthWorkRestRatio}" />
