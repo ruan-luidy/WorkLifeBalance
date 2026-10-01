@@ -7,45 +7,59 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:shell="clr-namespace:WorkLifeBalance.Shell"
     Title="WorkLifeBalance"
-    MinWidth="{Binding WindowService.LoadedPage.PageWidth}"
-    MinHeight="{Binding WindowService.LoadedPage.PageHeight}"
-    MaxWidth="{Binding WindowService.LoadedPage.PageWidth}"
-    MaxHeight="{Binding WindowService.LoadedPage.PageHeight}"
+    Width="700"
+    Height="560"
     d:DataContext="{d:DesignInstance Type=shell:SecondWindowViewModel}"
     AllowsTransparency="True"
     Background="Transparent"
+    PreviewMouseDown="OnPreviewMouseDown"
     ResizeMode="NoResize"
     WindowStyle="None"
     mc:Ignorable="d">
 
-    <Border
-        Margin="10"
-        Padding="0"
-        Effect="{StaticResource Shadow.Card}"
-        Style="{StaticResource SurfaceCard}">
-        <DockPanel>
-            <Border
-                Padding="14,8,8,8"
-                Background="Transparent"
-                BorderBrush="{DynamicResource BorderBrush}"
-                BorderThickness="0,0,0,1"
-                DockPanel.Dock="Top"
-                MouseDown="MoveWindow">
-                <Grid>
-                    <TextBlock
-                        VerticalAlignment="Center"
-                        Style="{StaticResource SectionHeaderText}"
-                        Margin="0"
-                        Text="{Binding WindowService.LoadedPage.PageName}" />
-                    <Button
-                        HorizontalAlignment="Right"
-                        Command="{Binding CloseWindowCommand}"
-                        Style="{StaticResource IconButtonDanger}"
-                        Tag="{icons:Phosphor XBold}"
-                        ToolTip="Close" />
-                </Grid>
-            </Border>
-            <ContentControl Margin="14,12,14,14" Content="{Binding WindowService.LoadedPage}" />
-        </DockPanel>
-    </Border>
+    <Window.InputBindings>
+        <KeyBinding
+            Key="Left"
+            Command="{Binding GoBackCommand}"
+            Modifiers="Alt" />
+    </Window.InputBindings>
+
+    <!--  The margin leaves room for the shadow, the window cuts anything outside it  -->
+    <Grid Margin="16">
+        <Border Style="{StaticResource CardShadow}" />
+        <Border Padding="0" Style="{StaticResource SurfaceCard}">
+            <DockPanel>
+                <Border
+                    Padding="8"
+                    Background="Transparent"
+                    BorderBrush="{DynamicResource BorderBrush}"
+                    BorderThickness="0,0,0,1"
+                    DockPanel.Dock="Top"
+                    MouseDown="MoveWindow">
+                    <DockPanel>
+                        <Button
+                            Margin="0,0,6,0"
+                            Command="{Binding GoBackCommand}"
+                            DockPanel.Dock="Left"
+                            Style="{StaticResource IconButton}"
+                            Tag="{icons:Phosphor ArrowLeftBold}"
+                            ToolTip="Back (Alt+Left)"
+                            Visibility="{Binding Navigation.CanGoBack, Converter={StaticResource BoolToVisibleConverter}}" />
+                        <Button
+                            Command="{Binding CloseWindowCommand}"
+                            DockPanel.Dock="Right"
+                            Style="{StaticResource IconButtonDanger}"
+                            Tag="{icons:Phosphor XBold}"
+                            ToolTip="Close" />
+                        <TextBlock
+                            Margin="6,0,0,0"
+                            VerticalAlignment="Center"
+                            Style="{StaticResource SectionHeaderText}"
+                            Text="{Binding WindowService.LoadedPage.PageName}" />
+                    </DockPanel>
+                </Border>
+                <ContentControl Margin="14,12,14,14" Content="{Binding WindowService.LoadedPage}" />
+            </DockPanel>
+        </Border>
+    </Grid>
 </Window>

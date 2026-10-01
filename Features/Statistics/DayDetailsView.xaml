@@ -29,14 +29,6 @@
             </UniformGrid>
         </Border>
 
-        <Button
-            Margin="0,10,0,0"
-            HorizontalAlignment="Left"
-            Command="{Binding BackToViewDaysPageCommand}"
-            Content="Back"
-            DockPanel.Dock="Bottom"
-            Style="{StaticResource ToolbarButton}" />
-
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition />

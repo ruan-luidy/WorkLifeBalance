@@ -25,11 +25,6 @@
     <DockPanel>
         <Grid Margin="0,10,0,0" DockPanel.Dock="Bottom">
             <Button
-                HorizontalAlignment="Left"
-                Command="{Binding ReturnToPreviousPageCommand}"
-                Content="Back"
-                Style="{StaticResource ToolbarButton}" />
-            <Button
                 HorizontalAlignment="Right"
                 Command="{Binding OpenAddPageWindowCommand}"
                 Style="{StaticResource ToolbarButton}"

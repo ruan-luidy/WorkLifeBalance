@@ -39,16 +39,11 @@ namespace WorkLifeBalance.Features.Statistics
 
         private DayData[] _allDays = [];
 
-        // used to come back to the same list when leaving the day details page
-        private DaysRange _range;
-
         public DaysViewModel(IWindowService<SecondWindowPageBase> secondWindowService, StatisticsStore store, DataStorageFeature dataStorage)
         {
             _secondWindowService = secondWindowService;
             _store = store;
             _dataStorage = dataStorage;
-            PageHeight = 520;
-            PageWidth = 600;
             SetFilterValues();
         }
 
@@ -57,10 +52,7 @@ namespace WorkLifeBalance.Features.Statistics
         public override async Task OnPageOpeningAsync(object? args = null)
         {
             if (args is DaysRange range)
-            {
                 await RequestData(range);
-                _range = range;
-            }
         }
 
         // 0 means "any" in the three filters
@@ -102,13 +94,10 @@ namespace WorkLifeBalance.Features.Statistics
         }
 
         [RelayCommand]
-        private void ReturnToPreviousPage() => _secondWindowService.OpenWith<StatisticsViewModel>();
-
-        [RelayCommand]
         private void ViewDay(DayData day)
         {
             day.ConvertSaveDataToUsableData();
-            _secondWindowService.OpenWith<DayDetailsViewModel>((_range, day));
+            _secondWindowService.OpenWith<DayDetailsViewModel>(day);
         }
 
         [RelayCommand]

@@ -10,5 +10,7 @@ namespace WorkLifeBalance.Shared.Navigation
         }
 
         public ViewModelBase NavigateTo<T>() where T : ViewModelBase => _viewModelFactory(typeof(T));
+
+        public ViewModelBase NavigateTo(Type viewModelType) => _viewModelFactory(viewModelType);
     }
 }

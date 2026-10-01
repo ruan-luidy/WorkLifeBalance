@@ -13,8 +13,6 @@ namespace WorkLifeBalance.Features.CloseApp
         public CloseWarningViewModel(DataStorageFeature dataStorage)
         {
             _dataStorage = dataStorage;
-            PageHeight = 170;
-            PageWidth = 320;
             PageName = "Close Warning";
         }
 

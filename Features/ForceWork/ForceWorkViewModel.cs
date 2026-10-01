@@ -1,6 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using WorkLifeBalance.Features.Options;
 using WorkLifeBalance.Shared.Navigation;
 using WorkLifeBalance.Shared.Scheduling;
 
@@ -77,8 +76,6 @@ namespace WorkLifeBalance.Features.ForceWork
             _forceWorkFeature = forceWorkFeature;
             _secondWindowService = secondWindowService;
             _featuresService = featuresService;
-            PageHeight = 420;
-            PageWidth = 400;
             PageName = "Force Work";
         }
 
@@ -110,9 +107,6 @@ namespace WorkLifeBalance.Features.ForceWork
             LongRestTimeSetting = _forceWorkFeature.LongRestTimeSetting;
             LongRestIntervalSetting = _forceWorkFeature.LongRestIntervalSetting;
         }
-
-        [RelayCommand]
-        private void ReturnToOptions() => _secondWindowService.OpenWith<OptionsViewModel>();
 
         [RelayCommand]
         private void ToggleForceWork()

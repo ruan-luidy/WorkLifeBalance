@@ -16,8 +16,8 @@ namespace WorkLifeBalance.Features.WorkApps
         public AddUrlViewModel(IWindowService<PopupWindowPageBase> windowService)
         {
             _windowService = windowService;
-            PageHeight = 320;
-            PageWidth = 300;
+            PageHeight = 340;
+            PageWidth = 330;
             PageName = "Enter \"working\" URLs";
         }
 

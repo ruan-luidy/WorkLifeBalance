@@ -23,8 +23,6 @@ namespace WorkLifeBalance.Features.Updates
         {
             _lowLevelHandler = lowLevelHandler;
             PageName = "Update Available";
-            PageHeight = 400;
-            PageWidth = 350;
         }
 
         public override Task OnPageOpeningAsync(object? args = null)

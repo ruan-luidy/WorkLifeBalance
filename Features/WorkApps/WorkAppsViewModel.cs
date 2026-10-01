@@ -3,7 +3,6 @@ using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using WorkLifeBalance.Features.Options;
 using WorkLifeBalance.Features.Tracking;
 using WorkLifeBalance.Shared.Data;
 using WorkLifeBalance.Shared.Native;
@@ -33,8 +32,6 @@ namespace WorkLifeBalance.Features.WorkApps
             _activityTracker = activityTracker;
             _secondWindowService = secondWindowService;
             _popupService = popupService;
-            PageHeight = 560;
-            PageWidth = 720;
             PageName = "Customize Work Apps";
         }
 
@@ -116,9 +113,6 @@ namespace WorkLifeBalance.Features.WorkApps
 
             return hosts.ToArray();
         }
-
-        [RelayCommand]
-        private void ReturnToPreviousPage() => _secondWindowService.OpenWith<OptionsViewModel>();
 
         [RelayCommand]
         private void SelectProcess(string processName)

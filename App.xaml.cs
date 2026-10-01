@@ -72,7 +72,8 @@ namespace WorkLifeBalance
             services.AddSingleton<StartupTask>();
             services.AddSingleton<ISoundService, SoundService>();
             services.AddSingleton<INavigationService, NavigationService>();
-            services.AddSingleton<IWindowService<SecondWindowPageBase>, SecondWindowService>();
+            services.AddSingleton<SecondWindowService>();
+            services.AddSingleton<IWindowService<SecondWindowPageBase>>(provider => provider.GetRequiredService<SecondWindowService>());
             services.AddSingleton<IWindowService<PopupWindowPageBase>, PopupWindowService>();
             services.AddSingleton<IWindowService<MainWindowDetailsPageBase>, MainWindowDetailsService>();
             services.AddSingleton<LoadingViewModel>();
