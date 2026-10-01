@@ -1,133 +1,77 @@
-﻿<Page x:Class="WorkLifeBalance.Features.Settings.SettingsView"
-      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-      xmlns:local="clr-namespace:WorkLifeBalance.Features.Settings"
-      xmlns:models="clr-namespace:WorkLifeBalance.Shared.Data"
-      xmlns:converters="clr-namespace:WorkLifeBalance.Shared.Converters"
-      mc:Ignorable="d" 
-      d:DesignHeight="270" d:DesignWidth="200"
-      Title="SettingsView">
-    
-    <Border Margin="8,0,8,8">
-            <ScrollViewer VerticalScrollBarVisibility="Hidden">
-                <StackPanel>
-                <Border Margin="35,5,35,5"
-                            CornerRadius="8"
-                            Background="{StaticResource WBlue}">
+<UserControl
+    x:Class="WorkLifeBalance.Features.Settings.SettingsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:settings="clr-namespace:WorkLifeBalance.Features.Settings"
+    d:DataContext="{d:DesignInstance Type=settings:SettingsViewModel}"
+    mc:Ignorable="d">
 
-                        <TextBlock Text="{Binding Version}"
-                                   TextAlignment="Center"
-                                   VerticalAlignment="Center"
-                                   HorizontalAlignment="Center"
-                                   FontWeight="Bold" 
-                                   Name="VersionT" Margin="2" FontSize="12"
-                                   Foreground="White"/>
-                </Border>
-                <Border Height="45"
-                        Margin="0,0,0,5"
-                        CornerRadius="15"
-                        Background="{StaticResource WBlue}">
+    <UserControl.Resources>
+        <Style
+            x:Key="SettingLabel"
+            BasedOn="{StaticResource BodyText}"
+            TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
 
-                        <StackPanel Orientation="Vertical">
+        <Style x:Key="SettingRow" TargetType="DockPanel">
+            <Setter Property="Margin" Value="0,0,0,10" />
+            <Setter Property="LastChildFill" Value="True" />
+        </Style>
+    </UserControl.Resources>
 
-                            <TextBlock Text="Start With Windows?"
-                                       TextAlignment="Center"
-                                       FontWeight="Bold"
-                                       FontSize="15"
-                                       Foreground="White"/>
-                            <ToggleButton Height="20"
-                                          Width="20"
-                                          IsChecked="{Binding StartWithWin, Mode=TwoWay}"
-                                          Style="{StaticResource RoundedToggleBtnStyle}"
-                                          Template="{StaticResource RoundedToggleBtnTemp}">
+    <DockPanel>
+        <TextBlock
+            DockPanel.Dock="Bottom"
+            Style="{StaticResource CaptionText}"
+            Text="{Binding Version}" />
 
-                            </ToggleButton>
-                        </StackPanel>
-                </Border>
-                <Border Height="45"
-                        Margin="0,0,0,5"
-                        CornerRadius="15"
-                        Background="{StaticResource WBlue}">
+        <StackPanel>
+            <DockPanel Style="{StaticResource SettingRow}">
+                <ToggleButton
+                    DockPanel.Dock="Right"
+                    IsChecked="{Binding StartWithWin}"
+                    Style="{StaticResource ToggleButtonSwitch}" />
+                <TextBlock Style="{StaticResource SettingLabel}" Text="Start with Windows" />
+            </DockPanel>
 
-                    <StackPanel Orientation="Vertical">
+            <DockPanel Style="{StaticResource SettingRow}">
+                <ToggleButton
+                    DockPanel.Dock="Right"
+                    IsChecked="{Binding MinimizeToTray}"
+                    Style="{StaticResource ToggleButtonSwitch}" />
+                <TextBlock Style="{StaticResource SettingLabel}" Text="Minimize to tray" />
+            </DockPanel>
 
-                        <TextBlock Text="Minimize To Tray?"
-                                   TextAlignment="Center"
-                                   FontWeight="Bold"
-                                   FontSize="15"
-                                   Foreground="White"/>
-                        <ToggleButton Height="20"
-                                      Width="20"
-                                      IsChecked="{Binding MinimizeToTray, Mode=TwoWay}"
-                                      Style="{StaticResource RoundedToggleBtnStyle}"
-                                      Template="{StaticResource RoundedToggleBtnTemp}">
+            <DockPanel Style="{StaticResource SettingRow}" ToolTip="The interval of saving information in minutes">
+                <hc:ComboBox
+                    Width="64"
+                    DockPanel.Dock="Right"
+                    ItemsSource="{Binding Numbers}"
+                    SelectedItem="{Binding AutoSaveInterval}" />
+                <TextBlock Style="{StaticResource SettingLabel}" Text="Save every (minutes)" />
+            </DockPanel>
 
-                        </ToggleButton>
-                    </StackPanel>
-                </Border>
-                <Border Height="50"
-                        Margin="0,5,0,5"
-                        ToolTip="The interval of saving information in minutes"
-                        CornerRadius="15"
-                        Background="{StaticResource WBlue}">
+            <DockPanel Style="{StaticResource SettingRow}" ToolTip="The interval of detecting the active background window">
+                <hc:ComboBox
+                    Width="64"
+                    DockPanel.Dock="Right"
+                    ItemsSource="{Binding Numbers}"
+                    SelectedItem="{Binding AutoDetectInterval}" />
+                <TextBlock Style="{StaticResource SettingLabel}" Text="Detect state (seconds)" />
+            </DockPanel>
 
-                        <StackPanel Orientation="Vertical">
-
-                            <TextBlock Text="Save In Minutes"
-                                       TextAlignment="Center"
-                                       FontWeight="Bold"
-                                       FontSize="15"
-                                       Foreground="White"/>
-                            <ComboBox Width="50"
-                                      Height="25"
-                                      SelectedItem="{Binding AutoSaveInterval, Mode=TwoWay}"
-                                      ItemsSource="{Binding Numbers}"
-                                      Style="{StaticResource CustomComboBoxStyle}"
-                                      ItemContainerStyle ="{StaticResource CustomComboBoxItemStyle}"
-                                      Margin="0,2,0,0"/>
-                        </StackPanel>
-                    </Border>
-                <Border Background="{StaticResource WBlue}"
-                        Margin="0,5,0,5"
-                        ToolTip="The interval of detecting the active background window"
-                        CornerRadius="15">
-                    <StackPanel Margin="2">
-                        <TextBlock Text="Detect State In Seconds"
-                                   TextAlignment="Center"
-                                   FontWeight="Bold"
-                                   FontSize="14"
-                                   Foreground="White"/>
-                        <ComboBox Width="50"
-                                  SelectedItem="{Binding AutoDetectInterval, Mode=TwoWay}"
-                                  Height="22"
-                                  ItemsSource="{Binding Numbers}"
-                                  Style="{StaticResource CustomComboBoxStyle}"
-                                  ItemContainerStyle ="{StaticResource CustomComboBoxItemStyle}"
-                                  Margin="0,2,0,0"/>
-                    </StackPanel>
-                </Border>
-                <Border Background="{StaticResource WBlue}"
-                        Margin="0,5,0,5"
-                        ToolTip="The interval checking the mouse position for AFK"
-                        CornerRadius="15">
-                    <StackPanel Margin="2">
-                        <TextBlock Text="Detect Idle In Minutes"
-                                   TextAlignment="Center"
-                                   FontWeight="Bold"
-                                   FontSize="14"
-                                   Foreground="White"/>
-                        <ComboBox Width="50"
-                                  Height="22"
-                                  SelectedItem="{Binding AutoDetectIdleInterval, Mode=TwoWay}"
-                                  ItemsSource="{Binding Numbers}"
-                                  Style="{StaticResource CustomComboBoxStyle}"
-                                  ItemContainerStyle ="{StaticResource CustomComboBoxItemStyle}"
-                                  Margin="0,2,0,0"/>
-                    </StackPanel>
-                </Border>
-            </StackPanel>
-            </ScrollViewer>
-        </Border>
-</Page>
+            <DockPanel Style="{StaticResource SettingRow}" ToolTip="The interval checking the mouse position for AFK">
+                <hc:ComboBox
+                    Width="64"
+                    DockPanel.Dock="Right"
+                    ItemsSource="{Binding Numbers}"
+                    SelectedItem="{Binding AutoDetectIdleInterval}" />
+                <TextBlock Style="{StaticResource SettingLabel}" Text="Detect idle (minutes)" />
+            </DockPanel>
+        </StackPanel>
+    </DockPanel>
+</UserControl>

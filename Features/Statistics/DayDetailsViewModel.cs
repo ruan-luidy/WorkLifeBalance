@@ -25,8 +25,8 @@ namespace WorkLifeBalance.Features.Statistics
         {
             _secondWindowService = secondWindowService;
             _store = store;
-            PageHeight = 440;
-            PageWidth = 630;
+            PageHeight = 460;
+            PageWidth = 640;
             PageName = "View Day Details";
         }
 

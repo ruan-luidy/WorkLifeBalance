@@ -17,6 +17,8 @@
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
     <PackageReference Include="Dapper" Version="2.1.35" />
+    <PackageReference Include="HandyControls" Version="3.6.0" />
+    <PackageReference Include="MahApps.Metro.IconPacks.PhosphorIcons" Version="6.2.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.2" />
     <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="8.0.1" />
@@ -36,10 +38,10 @@
     <Using Remove="System.Drawing" />
   </ItemGroup>
 
-  <!-- Read from disk at runtime: the config, the sounds (MediaPlayer) and the images the XAML points to -->
+  <!-- Read from disk at runtime: the config and the sounds (MediaPlayer) -->
   <ItemGroup>
     <None Remove="appsettings.json;Assets\**" />
-    <Content Include="appsettings.json;Assets\**\*.png;Assets\Sounds\*.mp3" Exclude="Assets\WorkLifeBalanceThumb.png" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="appsettings.json;Assets\Sounds\*.mp3" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

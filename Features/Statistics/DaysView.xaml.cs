@@ -2,7 +2,7 @@ using System.Windows.Controls;
 
 namespace WorkLifeBalance.Features.Statistics
 {
-    public partial class DaysView : Page
+    public partial class DaysView : UserControl
     {
         public DaysView()
         {

@@ -33,8 +33,8 @@ namespace WorkLifeBalance.Features.WorkApps
             _activityTracker = activityTracker;
             _secondWindowService = secondWindowService;
             _popupService = popupService;
-            PageHeight = 960;
-            PageWidth = 700;
+            PageHeight = 560;
+            PageWidth = 720;
             PageName = "Customize Work Apps";
         }
 

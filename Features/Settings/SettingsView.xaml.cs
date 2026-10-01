@@ -2,7 +2,7 @@ using System.Windows.Controls;
 
 namespace WorkLifeBalance.Features.Settings
 {
-    public partial class SettingsView : Page
+    public partial class SettingsView : UserControl
     {
         public SettingsView()
         {
