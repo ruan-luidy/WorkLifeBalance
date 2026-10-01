@@ -6,9 +6,9 @@
 
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="Style/Colors.xaml"/>
-                <ResourceDictionary Source="Style/Buttons.xaml"/>
-                <ResourceDictionary Source="Style/PageVMBindings.xaml"/>
+                <ResourceDictionary Source="Shared/Styles/Colors.xaml"/>
+                <ResourceDictionary Source="Shared/Styles/Buttons.xaml"/>
+                <ResourceDictionary Source="Shell/PageTemplates.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             
             <Style TargetType="{x:Type TextBlock}">

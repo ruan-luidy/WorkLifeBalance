@@ -15,18 +15,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Features\**" />
-    <EmbeddedResource Remove="Features\**" />
-    <None Remove="Features\**" />
-    <Page Remove="Features\**" />
-    <Page Update="PopupWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <XamlRuntime>Wpf</XamlRuntime>
-      <SubType>Designer</SubType>
-    </Page>
-  </ItemGroup>
-
-  <ItemGroup>
     <None Remove="appsettings.json" />
     <None Remove="Assets\Automat.png" />
     <None Remove="Assets\Cancel.png" />

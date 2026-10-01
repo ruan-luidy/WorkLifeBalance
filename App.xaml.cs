@@ -1,16 +1,25 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
-using WorkLifeBalance.Services.Feature;
-using WorkLifeBalance.Interfaces;
-using WorkLifeBalance.ViewModels;
-using WorkLifeBalance.Services;
 using System.Windows;
 using System.IO;
 using Serilog;
 using System;
 using System.Threading.Tasks;
-using WorkLifeBalance.ViewModels.Base;
-
+using WorkLifeBalance.Features.CloseApp;
+using WorkLifeBalance.Features.ForceState;
+using WorkLifeBalance.Features.ForceWork;
+using WorkLifeBalance.Features.Options;
+using WorkLifeBalance.Features.Settings;
+using WorkLifeBalance.Features.Statistics;
+using WorkLifeBalance.Features.Tracking;
+using WorkLifeBalance.Features.Updates;
+using WorkLifeBalance.Features.WorkApps;
+using WorkLifeBalance.Shared.Data;
+using WorkLifeBalance.Shared.Native;
+using WorkLifeBalance.Shared.Navigation;
+using WorkLifeBalance.Shared.Scheduling;
+using WorkLifeBalance.Shared.Sound;
+using WorkLifeBalance.Shell;
 namespace WorkLifeBalance
 {
     /// <summary>
@@ -39,8 +48,8 @@ namespace WorkLifeBalance
         private void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton<INavigationService, NavigationService>();
-            services.AddSingleton<IWindowService<SecondWindowPageVMBase>, SecondWindowService>();
-            services.AddSingleton<IWindowService<PopupWindowPageVMBase>, PopupWindowService>();
+            services.AddSingleton<IWindowService<SecondWindowPageBase>, SecondWindowService>();
+            services.AddSingleton<IWindowService<PopupWindowPageBase>, PopupWindowService>();
             services.AddSingleton<IFeaturesServices, FeaturesService>();
             services.AddSingleton<IUpdateCheckerService, UpdateCheckerService>();
             services.AddSingleton<IWindowService<MainWindowDetailsPageBase>, MainWindowDetailsService>();
@@ -61,6 +70,7 @@ namespace WorkLifeBalance
             services.AddSingleton<SqlDataAccess>();
             services.AddSingleton(_configuration);
             services.AddSingleton<DataBaseHandler>();
+            services.AddSingleton<StatisticsRepository>();
             services.AddSingleton<LowLevelHandler>();
             services.AddSingleton<AppStateHandler>();
             services.AddSingleton<SqlLiteDatabaseIntegrity>();
@@ -73,23 +83,23 @@ namespace WorkLifeBalance
             services.AddSingleton<Func<Type, FeatureBase>>(serviceProvider =>
                 featureBase => (FeatureBase)serviceProvider.GetRequiredService(featureBase));
 
-            services.AddSingleton<BackgroundProcessesViewPageVM>();
-            services.AddSingleton<MainWindowVM>();
-            services.AddSingleton<ForceWorkPageVM>();
-            services.AddSingleton<OptionsPageVM>();
-            services.AddSingleton<SecondWindowBaseVM>();
-            services.AddSingleton<PopupWindowBaseVM>();
-            services.AddSingleton<CloseWarningPageVM>();
-            services.AddSingleton<SettingsPageVM>();
-            services.AddSingleton<ViewDataPageVM>();
-            services.AddSingleton<UpdatePageVM>();
-            services.AddSingleton<LoadingPageVM>();
-            services.AddSingleton<ViewDayDetailsPageVM>();
-            services.AddSingleton<ViewDaysPageVM>();
-            services.AddSingleton<AddUrlPageVM>();
+            services.AddSingleton<WorkAppsViewModel>();
+            services.AddSingleton<MainViewModel>();
+            services.AddSingleton<ForceWorkViewModel>();
+            services.AddSingleton<OptionsViewModel>();
+            services.AddSingleton<SecondWindowViewModel>();
+            services.AddSingleton<PopupWindowViewModel>();
+            services.AddSingleton<CloseWarningViewModel>();
+            services.AddSingleton<SettingsViewModel>();
+            services.AddSingleton<StatisticsViewModel>();
+            services.AddSingleton<UpdateViewModel>();
+            services.AddSingleton<LoadingViewModel>();
+            services.AddSingleton<DayDetailsViewModel>();
+            services.AddSingleton<DaysViewModel>();
+            services.AddSingleton<AddUrlViewModel>();
 
-            services.AddSingleton<ForceWorkMainMenuDetailsPageVM>();
-            services.AddSingleton<ForceStateMainMenuDetailsPageVM>();
+            services.AddSingleton<ForceWorkPanelViewModel>();
+            services.AddSingleton<ForceStatePanelViewModel>();
         }
 
         protected override void OnStartup(StartupEventArgs e)
