@@ -1,93 +1,66 @@
-﻿using System;
 using Serilog;
 
-namespace WorkLifeBalance.Shared.Native;
-
-public static class UrlHelper
+namespace WorkLifeBalance.Shared.Native
 {
-    public static bool TryGetHost(string url, out string? host)
+    public static class UrlHelper
     {
-        if (string.IsNullOrEmpty(url) || !Uri.IsWellFormedUriString(url, UriKind.RelativeOrAbsolute))
+        public static bool TryGetHost(string? url, out string? host)
         {
             host = null;
-            return false;
-        }
-        
-        try
-        {
-            var uri = new Uri(url);
+            if (string.IsNullOrEmpty(url) || !Uri.IsWellFormedUriString(url, UriKind.RelativeOrAbsolute))
+                return false;
 
-            host = uri.Authority;
-            return true;
-        } catch (UriFormatException e)
-        {
-            Log.Warning("Failed to get authority from url: {0}. Trying to resolve by schema/host", url);
-
-            if (ValidateWithUriBuilder(url, out string? newUrl))
+            try
             {
-                host = newUrl;
+                host = new Uri(url).Authority;
                 return true;
             }
-        }
-        
-        Log.Warning("Failed to get host from url: " + url);
-        host = null;
-        return false;
-    }
+            catch (UriFormatException)
+            {
+                Log.Warning("Failed to get authority from url: {Url}. Trying to resolve by schema/host", url);
+                if (ValidateWithUriBuilder(url, out host))
+                    return true;
+            }
 
-    private static bool ValidateWithUriBuilder(string url, out string? newUrl)
-    {
-        string urlToValidate = url.TrimStart().TrimEnd();
-        
-        if (string.IsNullOrEmpty(urlToValidate))
-        {
-            newUrl = null;
+            Log.Warning("Failed to get host from url: {Url}", url);
             return false;
         }
 
-        try
+        private static bool ValidateWithUriBuilder(string url, out string? host)
         {
-            UriBuilder uriBuilder = new UriBuilder(urlToValidate);
+            host = null;
+            var trimmed = url.Trim();
+            if (string.IsNullOrEmpty(trimmed))
+                return false;
 
-            string? schema = GetSchema(urlToValidate);
-            if (schema != null)
+            try
             {
-                uriBuilder.Scheme = schema;
+                var builder = new UriBuilder(trimmed);
+                if (GetSchema(trimmed) is { } schema)
+                {
+                    builder.Scheme = schema;
+                    host = builder.Uri.Authority;
+                    return true;
+                }
 
-                newUrl = uriBuilder.Uri.Authority;
+                host = builder.Host;
                 return true;
             }
-            
-            newUrl = uriBuilder.Host;
-            return true;
-        }
-        catch (UriFormatException e)
-        {
-            newUrl = null;
-            return false;
-        }
-    }
-
-    private static string? GetSchema(string urlToValidate)
-    {
-        try
-        {
-
-            if (urlToValidate.AsSpan(0, 8).ToString() == "https://")
+            catch (UriFormatException)
             {
+                return false;
+            }
+        }
+
+        private static string? GetSchema(string url)
+        {
+            if (url.StartsWith("https://", StringComparison.Ordinal))
                 return "https";
-            }
 
-            if (urlToValidate.AsSpan(0, 7).ToString() == "http://")
-            {
+            if (url.StartsWith("http://", StringComparison.Ordinal))
                 return "http";
-            }
-        }
-        catch (ArgumentOutOfRangeException)
-        {
+
             return null;
         }
-
-        return null;
     }
 }

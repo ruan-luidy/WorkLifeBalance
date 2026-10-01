@@ -1,12 +1,19 @@
-﻿using Serilog;
-using System;
+using Serilog;
 using WorkLifeBalance.Features.Tracking;
+
 namespace WorkLifeBalance.Shared.Data
 {
     public class AppSettingsData
     {
         public readonly string Version = "2.0.7";
         public readonly string AppName = "WorkLifeBalance";
+
+        public AppSettingsData()
+        {
+            AppDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            AppExePath = $"{AppDirectory}{AppName}.exe";
+        }
+
         public string AppDirectory { get; set; }
         public string AppExePath { get; set; }
         public string LastTimeOpened { get; set; } = "";
@@ -23,13 +30,7 @@ namespace WorkLifeBalance.Shared.Data
         public bool IsForceStateActive { get; set; }
         public AppState ForcedAppstate { get; set; }
 
-        public Action OnSettingsChanged { get; set; } = new(() => { });
-
-        public AppSettingsData()
-        {
-            AppDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            AppExePath = @$"{AppDirectory}{AppName}.exe";
-        }
+        public Action OnSettingsChanged { get; set; } = () => { };
 
         public void ConvertSaveDataToUsableData()
         {
@@ -37,42 +38,30 @@ namespace WorkLifeBalance.Shared.Data
             {
                 if (!string.IsNullOrEmpty(LastTimeOpened))
                 {
-                    LastTimeOpenedC = new DateTime
-                        (
-                            int.Parse(LastTimeOpened.Substring(8, 4)),
-                            int.Parse(LastTimeOpened.Substring(4, 2)),
-                            int.Parse(LastTimeOpened.Substring(6, 2)),
-                            int.Parse(LastTimeOpened.Substring(0, 2)),
-                            int.Parse(LastTimeOpened.Substring(2, 2)),
-                            0
-                        );
+                    LastTimeOpenedC = new DateTime(
+                        int.Parse(LastTimeOpened.Substring(8, 4)),
+                        int.Parse(LastTimeOpened.Substring(4, 2)),
+                        int.Parse(LastTimeOpened.Substring(6, 2)),
+                        int.Parse(LastTimeOpened.Substring(0, 2)),
+                        int.Parse(LastTimeOpened.Substring(2, 2)),
+                        0);
                 }
+
                 StartWithWindowsC = StartWithWindows == 1;
                 MinimizeToTrayC = MinimizeToTray == 1;
-
             }
             catch (Exception ex)
             {
-                Log.Error("AppSettings Error: Failed to convert data to usable data", ex);
+                Log.Error(ex, "AppSettings: failed to convert data to usable data");
             }
-
         }
 
         public void ConvertUsableDataToSaveData()
         {
-            try
-            {
-                LastTimeOpenedC = DateTime.Now;
-                LastTimeOpened = LastTimeOpenedC.ToString("HHmmMMddyyyy");
-
-                MinimizeToTray = MinimizeToTrayC ? 1 : 0;
-
-                StartWithWindows = StartWithWindowsC ? 1 : 0;
-            }
-            catch (Exception ex)
-            {
-                Log.Error("AppSettings Error: Failed to convert usable data to save data", ex);
-            }
+            LastTimeOpenedC = DateTime.Now;
+            LastTimeOpened = LastTimeOpenedC.ToString("HHmmMMddyyyy");
+            MinimizeToTray = MinimizeToTrayC ? 1 : 0;
+            StartWithWindows = StartWithWindowsC ? 1 : 0;
         }
     }
 }

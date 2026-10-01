@@ -1,7 +1,5 @@
-﻿using System;
 namespace WorkLifeBalance.Shared.Data
 {
-    [Serializable]
     public class ProcessActivityData : ActivityDataBase
     {
         public override string Date { get; set; } = "06062023";

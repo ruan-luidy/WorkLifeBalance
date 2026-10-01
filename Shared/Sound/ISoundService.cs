@@ -1,14 +1,14 @@
-﻿namespace WorkLifeBalance.Shared.Sound
+namespace WorkLifeBalance.Shared.Sound
 {
     public interface ISoundService
     {
-        public void PlaySound(SoundType type);
+        void PlaySound(SoundType type);
+    }
 
-        public enum SoundType 
-        {
-            Warning,
-            Termination,
-            Finish
-        }
+    public enum SoundType
+    {
+        Warning,
+        Termination,
+        Finish,
     }
 }

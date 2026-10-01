@@ -1,9 +1,9 @@
-﻿namespace WorkLifeBalance.Features.Tracking
+namespace WorkLifeBalance.Features.Tracking
 {
     public enum AppState
     {
         Working,
         Resting,
-        Idle
+        Idle,
     }
 }

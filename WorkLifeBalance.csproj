@@ -1,37 +1,18 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows7.0</TargetFramework>
     <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
-	<UseWindowsForms>true</UseWindowsForms>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- NotifyIcon (minimize to tray) comes from Windows Forms -->
+    <UseWindowsForms>true</UseWindowsForms>
     <ApplicationIcon>Assets\WorkLifeBalanceLogo.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <StartupObject></StartupObject>
     <AnalysisLevel>6.0-recommended</AnalysisLevel>
     <InterceptorsPreviewNamespaces>$(InterceptorsPreviewNamespaces);Microsoft.Extensions.Configuration.Binder.SourceGeneration</InterceptorsPreviewNamespaces>
   </PropertyGroup>
-
-  <ItemGroup>
-    <None Remove="appsettings.json" />
-    <None Remove="Assets\Automat.png" />
-    <None Remove="Assets\Cancel.png" />
-    <None Remove="Assets\DataSheet.png" />
-    <None Remove="Assets\Idle.png" />
-    <None Remove="Assets\info.png" />
-    <None Remove="Assets\Minimize.png" />
-    <None Remove="Assets\money.png" />
-    <None Remove="Assets\notebook.png" />
-    <None Remove="Assets\Rest.png" />
-    <None Remove="Assets\Settings.png" />
-    <None Remove="Assets\Sounds\Error.mp3" />
-    <None Remove="Assets\Sounds\Finish.mp3" />
-    <None Remove="Assets\Sounds\Termination.mp3" />
-    <None Remove="Assets\Work.png" />
-    <None Remove="Assets\WorkLifeBalanceLogo.png" />
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
@@ -49,58 +30,16 @@
     <PackageReference Include="TaskScheduler" Version="2.11.0" />
   </ItemGroup>
 
+  <!-- Windows Forms is only here for NotifyIcon: its global usings would clash with WPF (Application, MessageBox...) -->
   <ItemGroup>
-    <Content Include="appsettings.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Automat.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Cancel.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\DataSheet.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Idle.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\info.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Minimize.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\money.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\notebook.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Rest.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Settings.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Sounds\Error.mp3">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Sounds\Finish.mp3">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Sounds\Termination.mp3">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Work.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
   </ItemGroup>
 
+  <!-- Read from disk at runtime: the config, the sounds (MediaPlayer) and the images the XAML points to -->
   <ItemGroup>
-    <None Update="Assets\WorkLifeBalanceLogo.ico">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </None>
+    <None Remove="appsettings.json;Assets\**" />
+    <Content Include="appsettings.json;Assets\**\*.png;Assets\Sounds\*.mp3" Exclude="Assets\WorkLifeBalanceThumb.png" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

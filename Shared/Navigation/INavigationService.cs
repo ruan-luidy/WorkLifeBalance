@@ -1,4 +1,4 @@
-﻿namespace WorkLifeBalance.Shared.Navigation
+namespace WorkLifeBalance.Shared.Navigation
 {
     public interface INavigationService
     {

@@ -1,4 +1,4 @@
-﻿namespace WorkLifeBalance.Features.Updates
+namespace WorkLifeBalance.Features.Updates
 {
     public class VersionData
     {

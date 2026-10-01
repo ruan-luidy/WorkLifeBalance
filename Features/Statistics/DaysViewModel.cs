@@ -1,96 +1,94 @@
-﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Threading.Tasks;
-using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
-using System;
+using CommunityToolkit.Mvvm.Input;
 using WorkLifeBalance.Shared.Data;
 using WorkLifeBalance.Shared.Navigation;
+
 namespace WorkLifeBalance.Features.Statistics
 {
+    public enum DaysRange
+    {
+        All,
+        CurrentMonth,
+        PreviousMonth,
+    }
+
     public partial class DaysViewModel : SecondWindowPageBase
     {
-        public ObservableCollection<DayData> LoadedData { get; set; } = new();
+        private readonly IWindowService<SecondWindowPageBase> _secondWindowService;
+        private readonly StatisticsStore _store;
+        private readonly DataStorageFeature _dataStorage;
 
         [ObservableProperty]
-        private int[]? filterDays;
+        private int[]? _filterDays;
 
         [ObservableProperty]
-        private int selectedDay = 0;
-        
-        [ObservableProperty]
-        private int[]? filterMonths;
+        private int _selectedDay;
 
         [ObservableProperty]
-        private int selectedMonth = 0;
-        
-        [ObservableProperty]
-        private int[]? filterYears;
+        private int[]? _filterMonths;
 
         [ObservableProperty]
-        private int selectedYear = 0;
+        private int _selectedMonth;
 
-        private DayData[]? backupdata;
-        //use this to request the correct page when leaving the DayActivity page
-        private int LoadedPageType;
-        private IWindowService<SecondWindowPageBase> secondWindowService;
-        private StatisticsRepository database;
-        private DataStorageFeature dataStorage;
-        public DaysViewModel(IWindowService<SecondWindowPageBase> secondWindowService, StatisticsRepository database, DataStorageFeature dataStorage)
+        [ObservableProperty]
+        private int[]? _filterYears;
+
+        [ObservableProperty]
+        private int _selectedYear;
+
+        private DayData[] _allDays = [];
+
+        // used to come back to the same list when leaving the day details page
+        private DaysRange _range;
+
+        public DaysViewModel(IWindowService<SecondWindowPageBase> secondWindowService, StatisticsStore store, DataStorageFeature dataStorage)
         {
+            _secondWindowService = secondWindowService;
+            _store = store;
+            _dataStorage = dataStorage;
             PageHeight = 570;
             PageWidth = 710;
-            this.secondWindowService = secondWindowService;
-            this.database = database;
-            this.dataStorage = dataStorage;
             SetFilterValues();
         }
 
-        private void SetFilterValues()
+        public ObservableCollection<DayData> LoadedData { get; set; } = new();
+
+        public override async Task OnPageOpeningAsync(object? args = null)
         {
-            //use the database to choose what days/month/years should the filters contain
-            DateOnly Today = dataStorage.TodayData.DateC;
-            List<int> Days = new();
-            List<int> Months = new();
-            List<int> Years = new();
-            for (int x = 0; x < 31; x++)
+            if (args is DaysRange range)
             {
-                Days.Add(x);
-                FilterDays = Days.ToArray();
+                await RequestData(range);
+                _range = range;
             }
-            for (int x = 0; x < 13; x++)
-            {
-                Months.Add(x);
-                FilterMonths = Months.ToArray();
-            }
-            for (int x = Today.Year; x > 2020 ; x--)
-            {
-                Years.Add(x);
-            }
-            Years.Add(0);
-            FilterYears = Years.ToArray();
         }
 
-        private async Task RequiestData(int requiestedDataType = 0)
+        // 0 means "any" in the three filters
+        private void SetFilterValues()
         {
-            DateOnly currentDate = dataStorage.TodayData.DateC;
-            DateTime previousMonthDateTime = currentDate.ToDateTime(new TimeOnly(0, 0, 0)).AddMonths(-1);
-            DateOnly previousDate = DateOnly.FromDateTime(previousMonthDateTime);
+            FilterDays = Enumerable.Range(0, 31).ToArray();
+            FilterMonths = Enumerable.Range(0, 13).ToArray();
+            FilterYears = Enumerable.Range(2021, _dataStorage.TodayData.DateC.Year - 2020).Reverse().Append(0).ToArray();
+        }
 
-            List<DayData> Days = new();
-            switch (requiestedDataType)
+        private async Task RequestData(DaysRange range)
+        {
+            var currentDate = _dataStorage.TodayData.DateC;
+            var previousDate = currentDate.AddMonths(-1);
+
+            var days = new List<DayData>();
+            switch (range)
             {
-                case 0:
-                    Days = await database.ReadMonth();
+                case DaysRange.All:
+                    days = await _store.ReadMonth();
                     PageName = "All Months Days";
                     break;
-                case 1:
-                    Days = await database.ReadMonth(currentDate.ToString("MM"), currentDate.ToString("yyyy"));
+                case DaysRange.CurrentMonth:
+                    days = await _store.ReadMonth(currentDate.ToString("MM"), currentDate.ToString("yyyy"));
                     PageName = "Current Month Days";
                     break;
-                case 2:
-                    Days = await database.ReadMonth(previousDate.ToString("MM"), previousDate.ToString("yyyy"));
+                case DaysRange.PreviousMonth:
+                    days = await _store.ReadMonth(previousDate.ToString("MM"), previousDate.ToString("yyyy"));
                     PageName = "Previous Month Days";
                     break;
             }
@@ -98,75 +96,37 @@ namespace WorkLifeBalance.Features.Statistics
             SelectedMonth = 0;
             SelectedDay = 0;
             SelectedYear = 0;
-
-            Days.Reverse();
-            LoadedData = new ObservableCollection<DayData>(Days);
-
-            backupdata = LoadedData.ToArray();
-        }
-
-        public override Task OnPageClosingAsync() => Task.CompletedTask;
-
-        public override async Task OnPageOpeningAsync(object? args = null)
-        {
-            if (args != null)
-            {
-                if (args is int loadedpagetype)
-                {
-                    await RequiestData(loadedpagetype);
-                    LoadedPageType = loadedpagetype;
-                }
-            }
+            days.Reverse();
+            LoadedData = new ObservableCollection<DayData>(days);
+            _allDays = days.ToArray();
         }
 
         [RelayCommand]
-        private void ReturnToPreviousPage()
-        {
-            secondWindowService.OpenWith<StatisticsViewModel>();
-        }
+        private void ReturnToPreviousPage() => _secondWindowService.OpenWith<StatisticsViewModel>();
 
         [RelayCommand]
-        private void ViewDay(DayData data)
+        private void ViewDay(DayData day)
         {
-            data.ConvertSaveDataToUsableData();
-
-            secondWindowService.OpenWith<DayDetailsViewModel>((LoadedPageType, data));
+            day.ConvertSaveDataToUsableData();
+            _secondWindowService.OpenWith<DayDetailsViewModel>((_range, day));
         }
 
         [RelayCommand]
         private void ApplyFilters()
         {
-            if (SelectedMonth == 0 && SelectedDay == 0 && SelectedYear == 0)
-            {
-                LoadedData.Clear();
-
-                foreach (DayData day in backupdata!)
-                {
-                    LoadedData.Add(day);
-                }
-                return;
-            }
-
-            DayData[] tempdata = backupdata!;
+            IEnumerable<DayData> days = _allDays;
             if (SelectedMonth != 0)
-            {
-                tempdata = tempdata.Where(daydata => daydata.DateC.Month == SelectedMonth).ToArray();
-            }
+                days = days.Where(day => day.DateC.Month == SelectedMonth);
+
             if (SelectedDay != 0)
-            {
-                tempdata = tempdata.Where(daydata => daydata.DateC.Day == SelectedDay).ToArray();
-            }
+                days = days.Where(day => day.DateC.Day == SelectedDay);
+
             if (SelectedYear != 0)
-            {
-                tempdata = tempdata.Where(daydata => daydata.DateC.Year == SelectedYear).ToArray();
-            }
+                days = days.Where(day => day.DateC.Year == SelectedYear);
 
             LoadedData.Clear();
-
-            foreach (DayData day in tempdata)
-            {
+            foreach (var day in days)
                 LoadedData.Add(day);
-            }
         }
     }
 }

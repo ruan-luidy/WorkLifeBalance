@@ -1,34 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
 using System.Windows.Media;
 
 namespace WorkLifeBalance.Shared.Sound
 {
     public class SoundService : ISoundService
     {
-        private Dictionary<ISoundService.SoundType, MediaPlayer> Sounds = new();
-
-        public SoundService()
+        private readonly Dictionary<SoundType, MediaPlayer> _sounds = new()
         {
-            MediaPlayer Warning = new();
-            Warning.Open(new Uri("Assets/Sounds/Error.mp3", UriKind.Relative));
+            [SoundType.Warning] = Open("Assets/Sounds/Error.mp3"),
+            [SoundType.Termination] = Open("Assets/Sounds/Termination.mp3"),
+            [SoundType.Finish] = Open("Assets/Sounds/Finish.mp3"),
+        };
 
-            MediaPlayer Termination = new();
-            Termination.Open(new Uri("Assets/Sounds/Termination.mp3", UriKind.Relative));
-
-            MediaPlayer Finish = new();
-            Finish.Open(new Uri("Assets/Sounds/Finish.mp3", UriKind.Relative));
-
-            Sounds.Add(ISoundService.SoundType.Warning, Warning);
-            Sounds.Add(ISoundService.SoundType.Termination, Termination);
-            Sounds.Add(ISoundService.SoundType.Finish, Finish);
+        public void PlaySound(SoundType type)
+        {
+            var sound = _sounds[type];
+            sound.Position = TimeSpan.Zero;
+            sound.Play();
         }
 
-        public void PlaySound(ISoundService.SoundType type)
+        private static MediaPlayer Open(string path)
         {
-            MediaPlayer activeSound = Sounds[type];
-            activeSound.Position = TimeSpan.Zero;
-            activeSound.Play();
+            var player = new MediaPlayer();
+            player.Open(new Uri(path, UriKind.Relative));
+            return player;
         }
     }
 }

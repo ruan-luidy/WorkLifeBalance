@@ -1,127 +1,80 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System;
 using WorkLifeBalance.Features.CloseApp;
 using WorkLifeBalance.Features.ForceState;
 using WorkLifeBalance.Features.Options;
 using WorkLifeBalance.Features.Statistics;
 using WorkLifeBalance.Features.Tracking;
 using WorkLifeBalance.Shared.Data;
-using WorkLifeBalance.Shared.Native;
 using WorkLifeBalance.Shared.Navigation;
 using WorkLifeBalance.Shared.Scheduling;
+
 namespace WorkLifeBalance.Shell
 {
     public partial class MainViewModel : ObservableObject
     {
-        [ObservableProperty]
-        private string? dateText;
+        private readonly DataStorageFeature _dataStorage;
+        private readonly IFeaturesService _featuresService;
+        private readonly IWindowService<SecondWindowPageBase> _secondWindowService;
 
         [ObservableProperty]
-        private TimeOnly elapsedWorkTime;
+        private string? _dateText;
 
         [ObservableProperty]
-        private TimeOnly elapsedRestTime;
+        private TimeOnly _elapsedWorkTime;
 
         [ObservableProperty]
-        private TimeOnly elapsedIdleTime;
+        private TimeOnly _elapsedRestTime;
 
         [ObservableProperty]
-        private AppState appState = AppState.Resting;
+        private TimeOnly _elapsedIdleTime;
 
-        public bool MinimizeToTray 
+        [ObservableProperty]
+        private AppState _appState = AppState.Resting;
+
+        public MainViewModel(DataStorageFeature dataStorage, TimeTrackerFeature timeTracker, IWindowService<SecondWindowPageBase> secondWindowService, AppStateHandler appStateHandler, IWindowService<MainWindowDetailsPageBase> detailsService, IFeaturesService featuresService)
         {
-            get 
-            { 
-                return dataStorageFeature.Settings.MinimizeToTrayC;
-            } 
+            _dataStorage = dataStorage;
+            _featuresService = featuresService;
+            _secondWindowService = secondWindowService;
+            MainWindowDetailsService = detailsService;
+
+            ShowToday();
+            appStateHandler.OnStateChanges += state => AppState = state;
+            dataStorage.OnSaving += () => DateText = "Saving data...";
+            dataStorage.OnSaved += ShowToday;
+            timeTracker.OnSpentTimeChange += OnTimeSpentChanged;
         }
 
-        public IWindowService<MainWindowDetailsPageBase> MainWindowDetailsService { get; set; }
+        public IWindowService<MainWindowDetailsPageBase> MainWindowDetailsService { get; }
 
-        private readonly AppStateHandler appStateHandler;
-        private readonly LowLevelHandler lowLevelHandler;
-        private readonly DataStorageFeature dataStorageFeature;
-        private readonly TimeTrackerFeature timeTrackerFeature;
-        private readonly IFeaturesServices featuresServices;
-        private readonly IWindowService<SecondWindowPageBase> secondWindowService;
+        public bool MinimizeToTray => _dataStorage.Settings.MinimizeToTrayC;
 
-        public MainViewModel(AppTimer mainTimer, LowLevelHandler lowLevelHandler, DataStorageFeature dataStorageFeature, TimeTrackerFeature timeTrackerFeature, IWindowService<SecondWindowPageBase> secondWindowService, AppStateHandler appStateHandler, IWindowService<MainWindowDetailsPageBase> mainWindowDetailsService, IFeaturesServices featuresServices)
-        {
-            this.lowLevelHandler = lowLevelHandler;
-            this.dataStorageFeature = dataStorageFeature;
-            this.timeTrackerFeature = timeTrackerFeature;
-            this.secondWindowService = secondWindowService;
-            this.appStateHandler = appStateHandler;
-            this.MainWindowDetailsService = mainWindowDetailsService;
-            this.featuresServices = featuresServices;
-
-            DateText = $"Today: {dataStorageFeature.TodayData.DateC:MM/dd/yyyy}";
-
-            SubscribeToEvents();
-        }
-
-        private void SubscribeToEvents()
-        {
-            appStateHandler.OnStateChanges += OnStateChanged;
-
-            dataStorageFeature.OnSaving += OnSavingData;
-            dataStorageFeature.OnSaved += OnDataSaved;
-
-            timeTrackerFeature.OnSpentTimeChange += OnTimeSpentChanged;
-        }
-
-        private void OnStateChanged(AppState state)
-        {
-            AppState = state;
-        }
-
-        private void OnSavingData()
-        {
-            DateText = "Saving data...";
-        }
-
-        private void OnDataSaved()
-        {
-            DateText = $"Today: {dataStorageFeature.TodayData.DateC:MM/dd/yyyy}";
-        }
+        private void ShowToday() => DateText = $"Today: {_dataStorage.TodayData.DateC:MM/dd/yyyy}";
 
         private void OnTimeSpentChanged()
         {
-            ElapsedWorkTime = dataStorageFeature.TodayData.WorkedAmmountC;
-            ElapsedRestTime = dataStorageFeature.TodayData.RestedAmmountC;
-            ElapsedIdleTime = dataStorageFeature.TodayData.IdleAmmountC;
+            ElapsedWorkTime = _dataStorage.TodayData.WorkedAmmountC;
+            ElapsedRestTime = _dataStorage.TodayData.RestedAmmountC;
+            ElapsedIdleTime = _dataStorage.TodayData.IdleAmmountC;
         }
 
         [RelayCommand]
         private void ToggleForceState()
         {
-            if (featuresServices.IsFeaturePresent<ForceStateFeature>())
-            {
-                featuresServices.RemoveFeature<ForceStateFeature>();
-            }
+            if (_featuresService.IsFeaturePresent<ForceStateFeature>())
+                _featuresService.RemoveFeature<ForceStateFeature>();
             else
-            {
-                featuresServices.AddFeature<ForceStateFeature>();
-            }
+                _featuresService.AddFeature<ForceStateFeature>();
         }
 
         [RelayCommand]
-        private void OpenViewDataWindow()
-        {
-            secondWindowService.OpenWith<StatisticsViewModel>();
-        }
+        private void OpenViewDataWindow() => _secondWindowService.OpenWith<StatisticsViewModel>();
 
         [RelayCommand]
-        private void OpenOptionsWindow()
-        {
-            secondWindowService.OpenWith<OptionsViewModel>();
-        }
+        private void OpenOptionsWindow() => _secondWindowService.OpenWith<OptionsViewModel>();
 
         [RelayCommand]
-        private void CloseApp()
-        {
-            secondWindowService.OpenWith<CloseWarningViewModel>();
-        }
+        private void CloseApp() => _secondWindowService.OpenWith<CloseWarningViewModel>();
     }
 }

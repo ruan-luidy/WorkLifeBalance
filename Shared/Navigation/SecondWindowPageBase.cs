@@ -1,15 +1,16 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
+
 namespace WorkLifeBalance.Shared.Navigation
 {
     public abstract partial class SecondWindowPageBase : PageViewModelBase
     {
         [ObservableProperty]
-        private double pageWidth = 250;
-        
+        private double _pageWidth = 250;
+
         [ObservableProperty]
-        private double pageHeight = 300;
-        
+        private double _pageHeight = 300;
+
         [ObservableProperty]
-        private string pageName = "Page";
+        private string _pageName = "Page";
     }
 }

@@ -1,14 +1,24 @@
-﻿using Serilog;
-using System;
-using System.Threading.Tasks;
+using Serilog;
 using WorkLifeBalance.Shared.Scheduling;
+
 namespace WorkLifeBalance.Shared.Data
 {
     public class DataStorageFeature : FeatureBase
     {
+        private readonly AppDataStore _store;
+
+        public DataStorageFeature(AppDataStore store)
+        {
+            _store = store;
+        }
+
+        public event Action? OnLoading;
+        public event Action? OnLoaded;
+        public event Action? OnSaving;
+        public event Action? OnSaved;
+
         public bool IsAppSaving { get; private set; }
         public bool IsAppLoading { get; private set; }
-
         public bool IsClosingApp { get; set; }
         public bool IsAppReady { get; set; }
 
@@ -16,93 +26,77 @@ namespace WorkLifeBalance.Shared.Data
         public AppSettingsData Settings { get; set; } = new();
         public AutoStateChangeData AutoChangeData { get; set; } = new();
 
-        public event Action? OnLoading;
-        public event Action? OnLoaded;
-        public event Action? OnSaving;
-        public event Action? OnSaved;
-        private readonly DataBaseHandler dataBaseHandler;
-        public DataStorageFeature(DataBaseHandler dataBaseHandler)
-        {
-            this.dataBaseHandler = dataBaseHandler;
-        }
         public async Task SaveData()
         {
-            if (IsAppSaving) return;
+            if (IsAppSaving)
+                return;
 
-            Log.Information($"Saving...");
-
+            Log.Information("Saving...");
             await CheckIsNewDay();
 
             IsAppSaving = true;
-
             OnSaving?.Invoke();
 
-            await dataBaseHandler.WriteDay(TodayData);
-            await dataBaseHandler.WriteSettings(Settings);
-            await dataBaseHandler.WriteAutoSateData(AutoChangeData);
+            await _store.WriteDay(TodayData);
+            await _store.WriteSettings(Settings);
+            await _store.WriteAutoStateData(AutoChangeData);
 
             OnSaved?.Invoke();
-
             IsAppSaving = false;
-
-            Log.Information($"Save Complete!");
+            Log.Information("Save Complete!");
         }
 
-        private async Task CheckIsNewDay()
-        {
-            //use day data, check against DateTime.Now and if it's not equal
-            //save the day and create a new day data and use settings to set the new day
-        }
-        
         public async Task LoadData()
         {
-            if (IsAppLoading) return;
+            if (IsAppLoading)
+                return;
 
             IsAppLoading = true;
-
             OnLoading?.Invoke();
 
-            Log.Information($"Loading Day");
-            TodayData = await dataBaseHandler.ReadDay(TodayData.DateC.ToString("MMddyyyy"));
-            Log.Information($"Loading Settings");
-            Settings = await dataBaseHandler.ReadSettings();
-            Log.Information($"Loading Activities");
-            AutoChangeData = await dataBaseHandler.ReadAutoStateData(TodayData.DateC.ToString("MMddyyyy"));
+            var today = TodayData.DateC.ToString(StoredFormat.Date);
+            Log.Information("Loading Day");
+            TodayData = await _store.ReadDay(today);
+            Log.Information("Loading Settings");
+            Settings = await _store.ReadSettings();
+            Log.Information("Loading Activities");
+            AutoChangeData = await _store.ReadAutoStateData(today);
 
             OnLoaded?.Invoke();
-
             IsAppLoading = false;
-            Log.Information($"Load Complete!");
+            Log.Information("Load Complete!");
         }
 
-        protected override Func<Task> ReturnFeatureMethod()
+        protected override Func<Task> ReturnFeatureMethod() => TriggerSaveData;
+
+        private Task CheckIsNewDay()
         {
-            return TriggerSaveData;
+            // TODO: compare TodayData with DateTime.Now and, when the day changed, save it and start a new DayData
+            return Task.CompletedTask;
         }
 
         private async Task TriggerSaveData()
         {
-            if (IsFeatureRuning) return;
+            if (IsFeatureRunning)
+                return;
 
-            IsFeatureRuning = true;
-
+            IsFeatureRunning = true;
             try
             {
-                await Task.Delay(Settings.SaveInterval * 60000, CancelTokenS.Token);
+                await Task.Delay(Settings.SaveInterval * 60000, CancelTokenSource.Token);
                 await SaveData();
             }
             catch (TaskCanceledException taskCancel)
             {
-                Log.Information($"DataStorage: {taskCancel.Message}");
+                Log.Information("DataStorage: {Message}", taskCancel.Message);
             }
             catch (Exception ex)
             {
                 Log.Error(ex, "DataStorage");
             }
-
             finally
             {
-                IsFeatureRuning = false;
+                IsFeatureRunning = false;
             }
         }
     }

@@ -1,45 +1,39 @@
-﻿using CommunityToolkit.Mvvm.Input;
-using Serilog;
-using System.Threading.Tasks;
 using System.Windows;
+using CommunityToolkit.Mvvm.Input;
+using Serilog;
 using WorkLifeBalance.Shared.Data;
 using WorkLifeBalance.Shared.Navigation;
+
 namespace WorkLifeBalance.Features.CloseApp
 {
     public partial class CloseWarningViewModel : SecondWindowPageBase
     {
-        private readonly DataStorageFeature dataStorageFeature;
-        public CloseWarningViewModel(DataStorageFeature dataStorageFeature)
+        private readonly DataStorageFeature _dataStorage;
+
+        public CloseWarningViewModel(DataStorageFeature dataStorage)
         {
+            _dataStorage = dataStorage;
             PageHeight = 160;
             PageWidth = 280;
             PageName = "Close Warning";
-            this.dataStorageFeature = dataStorageFeature;
         }
 
+        // Saves before closing so the last minutes are not lost
         [RelayCommand]
         private void CloseApp()
         {
-            if (dataStorageFeature.IsClosingApp) return;
+            if (_dataStorage.IsClosingApp)
+                return;
 
-            dataStorageFeature.IsClosingApp = true;
-
+            _dataStorage.IsClosingApp = true;
             Log.Information("------------------App Shuting Down------------------");
 
             _ = Task.Run(async () =>
             {
-                await dataStorageFeature.SaveData();
+                await _dataStorage.SaveData();
                 await Log.CloseAndFlushAsync();
-
-                App.Current.Dispatcher.Invoke(() =>
-                {
-                    Application.Current.Shutdown();
-                });
+                Application.Current.Dispatcher.Invoke(() => Application.Current.Shutdown());
             });
         }
-
-        public override Task OnPageClosingAsync() => Task.CompletedTask;
-
-        public override Task OnPageOpeningAsync(object? args = null) => Task.CompletedTask;
     }
 }

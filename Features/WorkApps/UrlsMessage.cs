@@ -1,10 +1,12 @@
-﻿using CommunityToolkit.Mvvm.Messaging.Messages;
+using CommunityToolkit.Mvvm.Messaging.Messages;
 
-namespace WorkLifeBalance.Features.WorkApps;
-
-public class UrlsMessage : ValueChangedMessage<string>
+namespace WorkLifeBalance.Features.WorkApps
 {
-    public UrlsMessage(string value) : base(value)
+    public class UrlsMessage : ValueChangedMessage<string>
     {
+        public UrlsMessage(string value)
+            : base(value)
+        {
+        }
     }
 }

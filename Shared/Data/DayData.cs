@@ -1,8 +1,7 @@
-﻿using System;
+using Serilog;
 
 namespace WorkLifeBalance.Shared.Data
 {
-    [Serializable]
     public class DayData
     {
         public string Date { get; set; } = "";
@@ -11,68 +10,34 @@ namespace WorkLifeBalance.Shared.Data
         public string IdleAmmount { get; set; } = "";
 
         public DateOnly DateC { get; set; } = DateOnly.FromDateTime(DateTime.Now);
-        public TimeOnly WorkedAmmountC { get; set; } = new TimeOnly(0, 0, 0);
-        public TimeOnly RestedAmmountC { get; set; } = new TimeOnly(0, 0, 0);
-        public TimeOnly IdleAmmountC { get; set; } = new TimeOnly(0, 0, 0);
+        public TimeOnly WorkedAmmountC { get; set; } = new(0, 0, 0);
+        public TimeOnly RestedAmmountC { get; set; } = new(0, 0, 0);
+        public TimeOnly IdleAmmountC { get; set; } = new(0, 0, 0);
 
         public void ConvertSaveDataToUsableData()
         {
+            if (string.IsNullOrEmpty(Date))
+                return;
+
             try
             {
-                if (string.IsNullOrEmpty(Date))
-                {
-                    return;
-                }
-
-                DateC = new DateOnly
-                    (
-                        int.Parse(Date.Substring(4, 4)),
-                        int.Parse(Date.Substring(0, 2)),
-                        int.Parse(Date.Substring(2, 2))
-                    );
-
-                WorkedAmmountC = new TimeOnly
-                    (
-                        int.Parse(WorkedAmmount.Substring(0, 2)),
-                        int.Parse(WorkedAmmount.Substring(2, 2)),
-                        int.Parse(WorkedAmmount.Substring(4, 2))
-                    );
-
-                RestedAmmountC = new TimeOnly
-                    (
-                        int.Parse(RestedAmmount.Substring(0, 2)),
-                        int.Parse(RestedAmmount.Substring(2, 2)),
-                        int.Parse(RestedAmmount.Substring(4, 2))
-                    );
-
-                IdleAmmountC = new TimeOnly
-                    (
-                        int.Parse(IdleAmmount.Substring(0, 2)),
-                        int.Parse(IdleAmmount.Substring(2, 2)),
-                        int.Parse(IdleAmmount.Substring(4, 2))
-                    );
+                DateC = StoredFormat.ParseDate(Date);
+                WorkedAmmountC = StoredFormat.ParseTime(WorkedAmmount);
+                RestedAmmountC = StoredFormat.ParseTime(RestedAmmount);
+                IdleAmmountC = StoredFormat.ParseTime(IdleAmmount);
             }
             catch (Exception ex)
             {
-                //MainWindow.ShowErrorBox("DayData Error", "Failed to convert data to usable data", ex);
+                Log.Error(ex, "DayData: failed to convert data to usable data");
             }
         }
+
         public void ConvertUsableDataToSaveData()
         {
-            try
-            {
-                Date = DateC.ToString("MMddyyyy");
-
-                WorkedAmmount = WorkedAmmountC.ToString("HHmmss");
-
-                RestedAmmount = RestedAmmountC.ToString("HHmmss");
-
-                IdleAmmount = IdleAmmountC.ToString("HHmmss");
-            }
-            catch (Exception ex)
-            {
-                //MainWindow.ShowErrorBox("DayData Error", "Failed to convert usable data to save data", ex);
-            }
+            Date = DateC.ToString(StoredFormat.Date);
+            WorkedAmmount = WorkedAmmountC.ToString(StoredFormat.Time);
+            RestedAmmount = RestedAmmountC.ToString(StoredFormat.Time);
+            IdleAmmount = IdleAmmountC.ToString(StoredFormat.Time);
         }
     }
 }

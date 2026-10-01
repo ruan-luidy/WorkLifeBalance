@@ -1,104 +1,74 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.ComponentModel;
 using WorkLifeBalance.Shared.Data;
 using WorkLifeBalance.Shared.Native;
 using WorkLifeBalance.Shared.Navigation;
-using WorkLifeBalance.Shared.Scheduling;
+
 namespace WorkLifeBalance.Features.Settings
 {
+    // The changes are applied and saved when the page closes
     public partial class SettingsViewModel : SecondWindowPageBase
     {
-        [ObservableProperty]
-        private string version = "";
+        private readonly DataStorageFeature _dataStorage;
+        private readonly StartupTask _startupTask;
 
         [ObservableProperty]
-        private int autoSaveInterval = 5;
+        private string _version = "";
 
         [ObservableProperty]
-        private int autoDetectInterval = 1;
+        private int _autoSaveInterval = 5;
 
         [ObservableProperty]
-        private int autoDetectIdleInterval = 1;
+        private int _autoDetectInterval = 1;
 
         [ObservableProperty]
-        private bool startWithWin = false;
+        private int _autoDetectIdleInterval = 1;
 
         [ObservableProperty]
-        private bool minimizeToTray = false;
+        private bool _startWithWin;
 
         [ObservableProperty]
-        private int[]? numbers;
+        private bool _minimizeToTray;
 
-        private readonly DataStorageFeature dataStorageFeature;
-        private readonly IFeaturesServices featuresServices;
-        private readonly LowLevelHandler lowLevelHandler;
+        [ObservableProperty]
+        private int[] _numbers = Enumerable.Range(1, 300).ToArray();
 
-        public SettingsViewModel(DataStorageFeature dataStorageFeature, IFeaturesServices featuresServices,
-            LowLevelHandler lowLevelHandler)
+        public SettingsViewModel(DataStorageFeature dataStorage, StartupTask startupTask)
         {
-            this.featuresServices = featuresServices;
-            this.dataStorageFeature = dataStorageFeature;
-            this.lowLevelHandler = lowLevelHandler;
+            _dataStorage = dataStorage;
+            _startupTask = startupTask;
             PageHeight = 320;
             PageWidth = 250;
             PageName = "Settings";
-
             InitializeData();
         }
 
-        public override Task OnPageOpeningAsync(object? args = null) => Task.CompletedTask;
-
-        private void InitializeData()
-        {
-            Version = $"Version: {dataStorageFeature.Settings.Version}";
-
-            AutoSaveInterval = dataStorageFeature.Settings.SaveInterval;
-
-            AutoDetectInterval = dataStorageFeature.Settings.AutoDetectInterval;
-
-            AutoDetectIdleInterval = dataStorageFeature.Settings.AutoDetectIdleInterval;
-
-            StartWithWin = dataStorageFeature.Settings.StartWithWindowsC;
-
-            MinimizeToTray = dataStorageFeature.Settings.MinimizeToTrayC;
-
-            List<int> numbersTemp = new();
-            for(int x = 1; x <= 300; x++)
-            {
-                numbersTemp.Add(x);
-            }
-            Numbers = numbersTemp.ToArray();
-        }
+        private AppSettingsData Settings => _dataStorage.Settings;
 
         public override async Task OnPageClosingAsync()
         {
-            dataStorageFeature.Settings.SaveInterval = AutoSaveInterval;
+            Settings.SaveInterval = AutoSaveInterval;
+            Settings.AutoDetectInterval = AutoDetectInterval;
+            Settings.AutoDetectIdleInterval = AutoDetectIdleInterval;
+            Settings.StartWithWindowsC = StartWithWin;
+            Settings.MinimizeToTrayC = MinimizeToTray;
+            await _dataStorage.SaveData();
 
-            dataStorageFeature.Settings.AutoDetectInterval = AutoDetectInterval;
+            if (Settings.StartWithWindowsC)
+                _startupTask.Create();
+            else
+                _startupTask.Delete();
 
-            dataStorageFeature.Settings.AutoDetectIdleInterval = AutoDetectIdleInterval;
-
-            dataStorageFeature.Settings.StartWithWindowsC = StartWithWin;
-
-            dataStorageFeature.Settings.MinimizeToTrayC = MinimizeToTray;
-
-            await dataStorageFeature.SaveData();
-
-            ApplyStartToWindows();
-            dataStorageFeature.Settings.OnSettingsChanged.Invoke();
+            Settings.OnSettingsChanged();
         }
 
-        private void ApplyStartToWindows()
+        private void InitializeData()
         {
-            if (dataStorageFeature.Settings.StartWithWindowsC)
-            {
-                lowLevelHandler.CreateStartupShortcut();
-            }
-            else
-            {
-                lowLevelHandler.DeleteStartupShortcut();
-            }
+            Version = $"Version: {Settings.Version}";
+            AutoSaveInterval = Settings.SaveInterval;
+            AutoDetectInterval = Settings.AutoDetectInterval;
+            AutoDetectIdleInterval = Settings.AutoDetectIdleInterval;
+            StartWithWin = Settings.StartWithWindowsC;
+            MinimizeToTray = Settings.MinimizeToTrayC;
         }
     }
 }

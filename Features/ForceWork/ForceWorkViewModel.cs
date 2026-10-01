@@ -1,139 +1,136 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System;
-using System.Threading.Tasks;
 using WorkLifeBalance.Features.Options;
 using WorkLifeBalance.Shared.Navigation;
 using WorkLifeBalance.Shared.Scheduling;
+
 namespace WorkLifeBalance.Features.ForceWork
 {
     public partial class ForceWorkViewModel : SecondWindowPageBase
     {
-        [ObservableProperty]
-        private int[] hours = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
-        
-        [ObservableProperty]
-        private int[] minutes = {0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55};
+        private readonly ForceWorkFeature _forceWorkFeature;
+        private readonly IWindowService<SecondWindowPageBase> _secondWindowService;
+        private readonly IFeaturesService _featuresService;
 
         [ObservableProperty]
-        private int totalWorkHours = 2;
+        private int[] _hours = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
         [ObservableProperty]
-        private int totalWorkMinutes;
+        private int[] _minutes = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
 
         [ObservableProperty]
-        private int workHours;
+        private int _totalWorkHours = 2;
 
         [ObservableProperty]
-        private int workMinutes = 25;
+        private int _totalWorkMinutes;
 
         [ObservableProperty]
-        private int restHours;
+        private int _workHours;
 
         [ObservableProperty]
-        private int restMinutes = 5;
+        private int _workMinutes = 25;
 
         [ObservableProperty]
-        private int longRestHours;
+        private int _restHours;
 
         [ObservableProperty]
-        private int longRestMinutes = 25;
+        private int _restMinutes = 5;
 
         [ObservableProperty]
-        private int longRestInterval = 4;
+        private int _longRestHours;
 
         [ObservableProperty]
-        private bool isFeatureActiv;
+        private int _longRestMinutes = 25;
 
         [ObservableProperty]
-        private int maxWarnings = 3;
+        private int _longRestInterval = 4;
 
         [ObservableProperty]
-        private TimeOnly totalWorkTimeSetting;
-        [ObservableProperty]
-        private TimeOnly workTimeSetting;
-        [ObservableProperty]
-        private TimeOnly restTimeSetting;
-        [ObservableProperty]
-        private TimeOnly longRestTimeSetting;
-        [ObservableProperty]
-        private int longRestIntervalSetting;
+        private bool _isFeatureActive;
 
         [ObservableProperty]
-        private int distractionCount;
+        private int _maxWarnings = 3;
 
         [ObservableProperty]
-        private string[] distractions = { "Process.exe", "Process.exe", "Process.exe" };
+        private TimeOnly _totalWorkTimeSetting;
 
-        private readonly ForceWorkFeature forceWorkFeature;
-        private readonly IWindowService<SecondWindowPageBase> secondWindowService;
-        private readonly IFeaturesServices featuresServices;
+        [ObservableProperty]
+        private TimeOnly _workTimeSetting;
 
-        public ForceWorkViewModel(ForceWorkFeature forceWorkFeature, IWindowService<SecondWindowPageBase> secondWindowService, IFeaturesServices featuresServices)
+        [ObservableProperty]
+        private TimeOnly _restTimeSetting;
+
+        [ObservableProperty]
+        private TimeOnly _longRestTimeSetting;
+
+        [ObservableProperty]
+        private int _longRestIntervalSetting;
+
+        [ObservableProperty]
+        private int _distractionCount;
+
+        [ObservableProperty]
+        private string[] _distractions = ["Process.exe", "Process.exe", "Process.exe"];
+
+        public ForceWorkViewModel(ForceWorkFeature forceWorkFeature, IWindowService<SecondWindowPageBase> secondWindowService, IFeaturesService featuresService)
         {
-            this.forceWorkFeature = forceWorkFeature;
-            this.featuresServices = featuresServices;
-            this.secondWindowService = secondWindowService;
+            _forceWorkFeature = forceWorkFeature;
+            _secondWindowService = secondWindowService;
+            _featuresService = featuresService;
             PageHeight = 410;
             PageWidth = 400;
             PageName = "Force Work";
         }
 
-        //maybe use observable pattern for properties instead of one onUpdate event
-        private void UpdateDataFromForceWork()
-        {
-            Distractions = forceWorkFeature.Distractions;
-            DistractionCount = forceWorkFeature.DistractionsCount;
-            IsFeatureActiv = featuresServices.IsFeaturePresent<ForceWorkFeature>();
-        }
-
-        private void GetForceWorkSettings()
-        {
-            TotalWorkTimeSetting = forceWorkFeature.TotalWorkTimeSetting;
-            WorkTimeSetting = forceWorkFeature.WorkTimeSetting;
-            RestTimeSetting = forceWorkFeature.RestTimeSetting;
-            LongRestTimeSetting = forceWorkFeature.LongRestTimeSetting;
-            LongRestIntervalSetting = forceWorkFeature.LongRestIntervalSetting;
-        }
-
         public override Task OnPageOpeningAsync(object? args = null)
         {
-            IsFeatureActiv = featuresServices.IsFeaturePresent<ForceWorkFeature>();
-            forceWorkFeature.OnDataUpdated += UpdateDataFromForceWork;
+            IsFeatureActive = _featuresService.IsFeaturePresent<ForceWorkFeature>();
+            _forceWorkFeature.OnDataUpdated += UpdateDataFromForceWork;
             return Task.CompletedTask;
         }
 
         public override Task OnPageClosingAsync()
         {
-            forceWorkFeature.OnDataUpdated -= UpdateDataFromForceWork;
+            _forceWorkFeature.OnDataUpdated -= UpdateDataFromForceWork;
             return Task.CompletedTask;
         }
 
-        [RelayCommand]
-        private void ReturnToOptions()
+        private void UpdateDataFromForceWork()
         {
-            secondWindowService.OpenWith<OptionsViewModel>();
+            Distractions = _forceWorkFeature.Distractions;
+            DistractionCount = _forceWorkFeature.DistractionsCount;
+            IsFeatureActive = _featuresService.IsFeaturePresent<ForceWorkFeature>();
         }
+
+        private void GetForceWorkSettings()
+        {
+            TotalWorkTimeSetting = _forceWorkFeature.TotalWorkTimeSetting;
+            WorkTimeSetting = _forceWorkFeature.WorkTimeSetting;
+            RestTimeSetting = _forceWorkFeature.RestTimeSetting;
+            LongRestTimeSetting = _forceWorkFeature.LongRestTimeSetting;
+            LongRestIntervalSetting = _forceWorkFeature.LongRestIntervalSetting;
+        }
+
+        [RelayCommand]
+        private void ReturnToOptions() => _secondWindowService.OpenWith<OptionsViewModel>();
 
         [RelayCommand]
         private void ToggleForceWork()
         {
-            if (IsFeatureActiv)
+            if (IsFeatureActive)
             {
-                featuresServices.RemoveFeature<ForceWorkFeature>();
-                IsFeatureActiv = false;
+                _featuresService.RemoveFeature<ForceWorkFeature>();
+                IsFeatureActive = false;
+                return;
             }
-            else
-            {
-                forceWorkFeature.SetWorkTime(WorkHours, WorkMinutes, MaxWarnings);
-                forceWorkFeature.SetRestTime(RestHours, RestMinutes);
-                forceWorkFeature.SetTotalWorkTime(TotalWorkHours, TotalWorkMinutes);
-                forceWorkFeature.SetLongRestTime(LongRestHours, LongRestMinutes, LongRestInterval);
 
-                GetForceWorkSettings();
-                featuresServices.AddFeature<ForceWorkFeature>();
-                IsFeatureActiv = true;
-            }
+            _forceWorkFeature.SetWorkTime(WorkHours, WorkMinutes, MaxWarnings);
+            _forceWorkFeature.SetRestTime(RestHours, RestMinutes);
+            _forceWorkFeature.SetTotalWorkTime(TotalWorkHours, TotalWorkMinutes);
+            _forceWorkFeature.SetLongRestTime(LongRestHours, LongRestMinutes, LongRestInterval);
+            GetForceWorkSettings();
+            _featuresService.AddFeature<ForceWorkFeature>();
+            IsFeatureActive = true;
         }
     }
 }

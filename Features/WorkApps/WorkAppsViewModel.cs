@@ -1,108 +1,124 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Windows;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using WorkLifeBalance.Features.Options;
 using WorkLifeBalance.Features.Tracking;
 using WorkLifeBalance.Shared.Data;
 using WorkLifeBalance.Shared.Native;
 using WorkLifeBalance.Shared.Navigation;
+
 namespace WorkLifeBalance.Features.WorkApps
 {
+    // Picks the processes and pages that count as "working"
     public partial class WorkAppsViewModel : SecondWindowPageBase, IRecipient<UrlsMessage>
     {
+        private readonly DataStorageFeature _dataStorage;
+        private readonly LowLevelHandler _lowLevelHandler;
+        private readonly ActivityTrackerFeature _activityTracker;
+        private readonly IWindowService<SecondWindowPageBase> _secondWindowService;
+        private readonly IWindowService<PopupWindowPageBase> _popupService;
+
+        [ObservableProperty]
+        private string _activeWindow = "";
+
+        [ObservableProperty]
+        private string _activePage = "";
+
+        public WorkAppsViewModel(DataStorageFeature dataStorage, LowLevelHandler lowLevelHandler, ActivityTrackerFeature activityTracker, IWindowService<SecondWindowPageBase> secondWindowService, IWindowService<PopupWindowPageBase> popupService)
+        {
+            _dataStorage = dataStorage;
+            _lowLevelHandler = lowLevelHandler;
+            _activityTracker = activityTracker;
+            _secondWindowService = secondWindowService;
+            _popupService = popupService;
+            PageHeight = 960;
+            PageWidth = 700;
+            PageName = "Customize Work Apps";
+        }
+
         public ObservableCollection<string> DetectedWindows { get; set; } = new();
         public ObservableCollection<string> SelectedProcesses { get; set; } = new();
         public ObservableCollection<string> SelectedPages { get; set; } = new();
         public ObservableCollection<string> DetectedTabs { get; set; } = new();
 
-        [ObservableProperty]
-        private string activeWindow = "";
-
-        [ObservableProperty] 
-        private string activePage = "";
-        
-        private DataStorageFeature dataStorageFeature;
-        private LowLevelHandler lowLevelHandler;
-        private ActivityTrackerFeature activityTrackerFeature;
-        private IWindowService<SecondWindowPageBase> secondWindowService;
-        private readonly IWindowService<PopupWindowPageBase> popupService;
-
-        public WorkAppsViewModel(DataStorageFeature dataStorageFeature, LowLevelHandler lowLevelHandler,
-            ActivityTrackerFeature activityTrackerFeature, IWindowService<SecondWindowPageBase> secondWindowService,
-            IWindowService<PopupWindowPageBase> popupService)
-        {
-            PageHeight = 960;
-            PageWidth = 700;
-            PageName = "Customize Work Apps";
-            this.dataStorageFeature = dataStorageFeature;
-            this.lowLevelHandler = lowLevelHandler;
-            this.activityTrackerFeature = activityTrackerFeature;
-            this.secondWindowService = secondWindowService;
-            this.popupService = popupService;
-        }
-
-        private void UpdateActiveWindowUi(string newwindow)
-        {
-            ActiveWindow = newwindow;
-        }
-
-        private void UpdateActivePageUi(string page)
-        {
-            if (UrlHelper.TryGetHost(page, out string? host))
-            {
-                ActivePage = host!;
-            }
-        }
-        
-        private void InitializeProcessNames()
-        {
-            if (!WeakReferenceMessenger.Default.IsRegistered<UrlsMessage>(this))
-            {
-                WeakReferenceMessenger.Default.Register(this);
-            }
-            SelectedProcesses = new ObservableCollection<string>(dataStorageFeature.AutoChangeData.WorkingStateWindows);
-            SelectedPages = new ObservableCollection<string>(dataStorageFeature.AutoChangeData.WorkingStateUrls);
-            
-            List<string> allProcesses = lowLevelHandler.GetBackgroundApplicationsName();
-            List<string> allTabs = lowLevelHandler.GetActiveBackgroundTabs()
-                .Select(x => UrlHelper.TryGetHost(x, out string? host) ? host! : null)
-                .Where(x => !string.IsNullOrEmpty(x))
-                .ToList()!;
-            
-            DetectedWindows = new ObservableCollection<string>(allProcesses.Except(SelectedProcesses));
-            DetectedTabs = new ObservableCollection<string>(allTabs.Except(SelectedPages));
-        }
-
         public override Task OnPageOpeningAsync(object? args = null)
         {
-            activityTrackerFeature.OnWindowChange += UpdateActiveWindowUi;
-            activityTrackerFeature.OnPageChange += UpdateActivePageUi;
+            _activityTracker.OnWindowChange += UpdateActiveWindowUi;
+            _activityTracker.OnPageChange += UpdateActivePageUi;
             InitializeProcessNames();
             return Task.CompletedTask;
         }
 
         public override async Task OnPageClosingAsync()
         {
-            activityTrackerFeature.OnWindowChange -= UpdateActiveWindowUi;
-            activityTrackerFeature.OnPageChange -= UpdateActivePageUi;
-            if(WeakReferenceMessenger.Default.IsRegistered<UrlsMessage>(this))
+            _activityTracker.OnWindowChange -= UpdateActiveWindowUi;
+            _activityTracker.OnPageChange -= UpdateActivePageUi;
+            if (WeakReferenceMessenger.Default.IsRegistered<UrlsMessage>(this))
                 WeakReferenceMessenger.Default.Unregister<UrlsMessage>(this);
-            dataStorageFeature.AutoChangeData.WorkingStateWindows = SelectedProcesses.ToArray();
-            dataStorageFeature.AutoChangeData.WorkingStateUrls = SelectedPages.ToArray();
-            
-            await popupService.Close();
-            await dataStorageFeature.SaveData();
+
+            _dataStorage.AutoChangeData.WorkingStateWindows = SelectedProcesses.ToArray();
+            _dataStorage.AutoChangeData.WorkingStateUrls = SelectedPages.ToArray();
+            await _popupService.Close();
+            await _dataStorage.SaveData();
         }
-        
-        [RelayCommand]
-        private void ReturnToPreviousPage()
+
+        public void Receive(UrlsMessage message)
         {
-            secondWindowService.OpenWith<OptionsViewModel>();
+            Task.Run(async () =>
+            {
+                var validUrls = PrepareAndValidateInputUrls(message.Value.Split('|'));
+                var uniqueUrls = new HashSet<string>(validUrls.Union(DetectedTabs).Except(SelectedPages));
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    DetectedTabs.Clear();
+                    foreach (var url in uniqueUrls)
+                        DetectedTabs.Add(url);
+                });
+            });
         }
+
+        private void UpdateActiveWindowUi(string window) => ActiveWindow = window;
+
+        private void UpdateActivePageUi(string page)
+        {
+            if (UrlHelper.TryGetHost(page, out var host))
+                ActivePage = host!;
+        }
+
+        private void InitializeProcessNames()
+        {
+            if (!WeakReferenceMessenger.Default.IsRegistered<UrlsMessage>(this))
+                WeakReferenceMessenger.Default.Register(this);
+
+            SelectedProcesses = new ObservableCollection<string>(_dataStorage.AutoChangeData.WorkingStateWindows);
+            SelectedPages = new ObservableCollection<string>(_dataStorage.AutoChangeData.WorkingStateUrls);
+
+            var allProcesses = _lowLevelHandler.GetBackgroundApplicationsName();
+            var allTabs = _lowLevelHandler.GetActiveBackgroundTabs()
+                .Select(url => UrlHelper.TryGetHost(url, out var host) ? host : null)
+                .Where(host => !string.IsNullOrEmpty(host))
+                .Select(host => host!);
+
+            DetectedWindows = new ObservableCollection<string>(allProcesses.Except(SelectedProcesses));
+            DetectedTabs = new ObservableCollection<string>(allTabs.Except(SelectedPages));
+        }
+
+        private static string[] PrepareAndValidateInputUrls(string[] inputUrls)
+        {
+            var hosts = new HashSet<string>();
+            foreach (var url in inputUrls)
+            {
+                if (!string.IsNullOrEmpty(url) && UrlHelper.TryGetHost(url, out var host))
+                    hosts.Add(host!);
+            }
+
+            return hosts.ToArray();
+        }
+
+        [RelayCommand]
+        private void ReturnToPreviousPage() => _secondWindowService.OpenWith<OptionsViewModel>();
 
         [RelayCommand]
         private void SelectProcess(string processName)
@@ -119,65 +135,24 @@ namespace WorkLifeBalance.Features.WorkApps
         }
 
         [RelayCommand]
-        private void DeselectProcess(string itemName)
+        private void DeselectProcess(string processName)
         {
-            SelectedProcesses.Remove(itemName);
-            DetectedWindows.Add(itemName); 
+            SelectedProcesses.Remove(processName);
+            DetectedWindows.Add(processName);
         }
 
         [RelayCommand]
-        private void DeselectPage(string itemName)
+        private void DeselectPage(string url)
         {
-            SelectedPages.Remove(itemName);
-            DetectedTabs.Add(itemName); 
+            SelectedPages.Remove(url);
+            DetectedTabs.Add(url);
         }
-        
+
         [RelayCommand]
         private async Task OpenAddPageWindow()
         {
-            IEnumerable<string> pages = SelectedPages.Concat(DetectedTabs);
-            string urls = string.Join("|", pages);
-            await popupService.OpenWith<AddUrlViewModel>(urls);
-        }
-        
-        public void Receive(UrlsMessage message)
-        {
-            Task.Run(async () =>
-            {
-                string[] inputUrls = message.Value.Split('|');
-                string[] validUrls = PrepareAndValidateInputUrls(inputUrls);
-                HashSet<string> uniqueUrls = new HashSet<string>(validUrls.Union(DetectedTabs).Except(SelectedPages));
-
-                await App.Current.Dispatcher.InvokeAsync(() =>
-                {
-                    DetectedTabs.Clear();
-                    foreach (var url in uniqueUrls)
-                    {
-                        DetectedTabs.Add(url);
-                    }
-                });
-
-            });
-        }
-
-        private static string[] PrepareAndValidateInputUrls(string[] inputUrls)
-        {
-            HashSet<string> result = new HashSet<string>();
-
-            foreach (string url in inputUrls)
-            {
-                if (string.IsNullOrEmpty(url))
-                {
-                    continue;
-                }
-
-                if (UrlHelper.TryGetHost(url, out string? host))
-                {
-                    result.Add(host!);
-                }
-            }
-
-            return result.ToArray();
+            var urls = string.Join("|", SelectedPages.Concat(DetectedTabs));
+            await _popupService.OpenWith<AddUrlViewModel>(urls);
         }
     }
 }

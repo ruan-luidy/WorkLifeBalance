@@ -1,11 +1,12 @@
-﻿using System.Windows.Controls;
+using System.Windows.Controls;
 
-namespace WorkLifeBalance.Features.WorkApps;
-
-public partial class AddUrlView : Page
+namespace WorkLifeBalance.Features.WorkApps
 {
-    public AddUrlView()
+    public partial class AddUrlView : Page
     {
-        InitializeComponent();
+        public AddUrlView()
+        {
+            InitializeComponent();
+        }
     }
 }

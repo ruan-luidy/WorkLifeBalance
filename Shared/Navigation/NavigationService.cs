@@ -1,9 +1,7 @@
-﻿using System;
 namespace WorkLifeBalance.Shared.Navigation
 {
-    public partial class NavigationService : INavigationService
+    public class NavigationService : INavigationService
     {
-
         private readonly Func<Type, ViewModelBase> _viewModelFactory;
 
         public NavigationService(Func<Type, ViewModelBase> viewModelFactory)
@@ -11,9 +9,6 @@ namespace WorkLifeBalance.Shared.Navigation
             _viewModelFactory = viewModelFactory;
         }
 
-        public ViewModelBase NavigateTo<TViewModelbase>() where TViewModelbase : ViewModelBase
-        {
-            return _viewModelFactory.Invoke(typeof(TViewModelbase)); 
-        }
+        public ViewModelBase NavigateTo<T>() where T : ViewModelBase => _viewModelFactory(typeof(T));
     }
 }

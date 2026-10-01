@@ -1,24 +1,27 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using System.Windows;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Serilog;
-using System.Threading.Tasks;
 using WorkLifeBalance.Shared.Native;
 using WorkLifeBalance.Shared.Navigation;
+
 namespace WorkLifeBalance.Features.Updates
 {
     public partial class UpdateViewModel : SecondWindowPageBase
     {
-        [ObservableProperty]
-        private string version = "Error";
+        private readonly LowLevelHandler _lowLevelHandler;
 
         [ObservableProperty]
-        private string updateLog = "Error";
+        private string _version = "Error";
 
-        private VersionData? Vdata;
-        private readonly LowLevelHandler lowLevelHandler;
+        [ObservableProperty]
+        private string _updateLog = "Error";
+
+        private VersionData? _versionData;
+
         public UpdateViewModel(LowLevelHandler lowLevelHandler)
         {
-            this.lowLevelHandler = lowLevelHandler;
+            _lowLevelHandler = lowLevelHandler;
             PageName = "Update Available";
             PageHeight = 400;
             PageWidth = 350;
@@ -28,29 +31,27 @@ namespace WorkLifeBalance.Features.Updates
         {
             if (args is VersionData data)
             {
-                Vdata = data;
-
-                Version = $"New Version: {Vdata.Version!}";
-                UpdateLog = Vdata.UpdateLog!;
+                _versionData = data;
+                Version = $"New Version: {data.Version}";
+                UpdateLog = data.UpdateLog!;
             }
-            else 
+            else
             {
-                Log.Error("UpdatePageVm oppened with wrong arguments, args != VersionData");
+                Log.Error("UpdateViewModel opened with wrong arguments, args != VersionData");
             }
 
             return Task.CompletedTask;
         }
-        
-        public override Task OnPageClosingAsync() => Task.CompletedTask;
 
+        // Opens the download page and closes the app so the new version can be installed
         [RelayCommand]
         private void GoToDownload()
         {
-            if(Vdata != null)
-            {
-                lowLevelHandler.OpenLink(Vdata.DownloadLink!);
-                App.Current.Shutdown();
-            }
+            if (_versionData == null)
+                return;
+
+            _lowLevelHandler.OpenLink(_versionData.DownloadLink!);
+            Application.Current.Shutdown();
         }
     }
 }

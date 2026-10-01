@@ -1,48 +1,33 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using System;
-using System.Threading.Tasks;
+using System.Windows;
+using CommunityToolkit.Mvvm.ComponentModel;
+
 namespace WorkLifeBalance.Shared.Navigation
 {
     public partial class MainWindowDetailsService : ObservableObject, IWindowService<MainWindowDetailsPageBase>
     {
-        //needs a way to stop multiple features requesting a MainWindowDetails page.
-        private INavigationService navigationService;
+        private readonly INavigationService _navigationService;
 
         [ObservableProperty]
-        private MainWindowDetailsPageBase? loadedPage;
+        private MainWindowDetailsPageBase? _loadedPage;
 
-        private MainWindowDetailsPageBase? activeMainWindowPage;
-        
-        public Action? OnPageLoaded { get; set; }
-    
-        partial void OnLoadedPageChanged(MainWindowDetailsPageBase? oldValue, MainWindowDetailsPageBase? newValue)
-        {
-            OnPageLoaded?.Invoke();
-        }
-        
         public MainWindowDetailsService(INavigationService navigationService)
         {
-            this.navigationService = navigationService;
+            _navigationService = navigationService;
         }
 
-        public async Task Close()
-        {
-            await ClearPage();
-        }
+        public Action? OnPageLoaded { get; set; }
 
-        public async Task OpenWith<TVm>(object? args) where TVm : PageViewModelBase
+        public async Task Close() => await ClearPage();
+
+        public async Task OpenWith<TViewModel>(object? args = null) where TViewModel : PageViewModelBase
         {
             await Task.Run(ClearPage);
 
-            activeMainWindowPage = (MainWindowDetailsPageBase)navigationService.NavigateTo<TVm>();
-
+            var page = (MainWindowDetailsPageBase)_navigationService.NavigateTo<TViewModel>();
             await Task.Run(async () =>
             {
-                await activeMainWindowPage.OnPageOpeningAsync(args);
-                App.Current.Dispatcher.Invoke(() =>
-                {
-                    LoadedPage = activeMainWindowPage;
-                });
+                await page.OnPageOpeningAsync(args);
+                Application.Current.Dispatcher.Invoke(() => LoadedPage = page);
             });
         }
 
@@ -54,5 +39,7 @@ namespace WorkLifeBalance.Shared.Navigation
                 LoadedPage = null;
             }
         }
+
+        partial void OnLoadedPageChanged(MainWindowDetailsPageBase? value) => OnPageLoaded?.Invoke();
     }
 }

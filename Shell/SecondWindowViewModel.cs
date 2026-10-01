@@ -1,23 +1,24 @@
-﻿using CommunityToolkit.Mvvm.Input;
-using System;
-using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.Input;
 using WorkLifeBalance.Shared.Navigation;
-namespace WorkLifeBalance.Shell;
 
-public partial class SecondWindowViewModel : NewWindowBase<SecondWindowPageBase>
+namespace WorkLifeBalance.Shell
 {
-    public Action? OnShowView { get; set; } = () => { };
-    public Action? OnHideView { get; set; } = () => { };
-
-    public SecondWindowViewModel(IWindowService<SecondWindowPageBase> windowService) : base(windowService)
+    public partial class SecondWindowViewModel : NewWindowBase<SecondWindowPageBase>
     {
-        windowService.OnPageLoaded += () => { OnShowView?.Invoke(); };
-    }
+        public SecondWindowViewModel(IWindowService<SecondWindowPageBase> windowService)
+            : base(windowService)
+        {
+            windowService.OnPageLoaded += () => OnShowView?.Invoke();
+        }
 
-    [RelayCommand]
-    protected override async Task CloseWindow()
-    {
-        await WindowService.Close();
-        OnHideView?.Invoke();
+        public Action? OnShowView { get; set; } = () => { };
+        public Action? OnHideView { get; set; } = () => { };
+
+        [RelayCommand]
+        protected override async Task CloseWindow()
+        {
+            await WindowService.Close();
+            OnHideView?.Invoke();
+        }
     }
 }

@@ -1,32 +1,34 @@
-﻿using System.Threading.Tasks;
-namespace WorkLifeBalance.Shared.Navigation;
+using System.Windows;
 
-public class PopupWindowService : WindowServiceBase<PopupWindowPageBase>,
-    IWindowService<PopupWindowPageBase>
+namespace WorkLifeBalance.Shared.Navigation
 {
-    public PopupWindowService(INavigationService navigationService) : base(navigationService)
+    public class PopupWindowService : WindowServiceBase<PopupWindowPageBase>, IWindowService<PopupWindowPageBase>
     {
-    }
-
-    public override async Task OpenWith<TVm>(object? args = null)
-    {
-        await ClearPage();
-
-        activePage = (PopupWindowPageBase)navigationService.NavigateTo<TVm>();
-
-        await App.Current.Dispatcher.InvokeAsync(async () =>
+        public PopupWindowService(INavigationService navigationService)
+            : base(navigationService)
         {
-            await activePage.OnPageOpeningAsync(args);
-            LoadedPage = activePage;
-        });
-    }
+        }
 
-    protected virtual async Task ClearPage()
-    {
-        if (LoadedPage != null)
+        public override async Task OpenWith<TViewModel>(object? args = null)
         {
-            await LoadedPage.OnPageClosingAsync();
-            LoadedPage = null;
+            await ClearLoadedPage();
+
+            var page = (PopupWindowPageBase)NavigationService.NavigateTo<TViewModel>();
+            ActivePage = page;
+            await Application.Current.Dispatcher.InvokeAsync(async () =>
+            {
+                await page.OnPageOpeningAsync(args);
+                LoadedPage = page;
+            });
+        }
+
+        private async Task ClearLoadedPage()
+        {
+            if (LoadedPage != null)
+            {
+                await LoadedPage.OnPageClosingAsync();
+                LoadedPage = null;
+            }
         }
     }
 }

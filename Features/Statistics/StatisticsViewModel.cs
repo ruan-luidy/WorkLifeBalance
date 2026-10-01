@@ -1,209 +1,167 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System;
-using System.Threading.Tasks;
+using Serilog;
 using WorkLifeBalance.Shared.Data;
 using WorkLifeBalance.Shared.Navigation;
+
 namespace WorkLifeBalance.Features.Statistics
 {
     public partial class StatisticsViewModel : SecondWindowPageBase
     {
-        [ObservableProperty]
-        private TimeOnly recordMostWorked;
-        [ObservableProperty]
-        private DateOnly recordMostWorkedDate;
+        private const float SecondsInADay = 86400;
+
+        private readonly StatisticsStore _store;
+        private readonly DataStorageFeature _dataStorage;
+        private readonly IWindowService<SecondWindowPageBase> _secondWindowService;
 
         [ObservableProperty]
-        private TimeOnly recordMostRested;
-        [ObservableProperty]
-        private DateOnly recordMostRestedDate;
+        private TimeOnly _recordMostWorked;
 
         [ObservableProperty]
-        private float currentMonthWorkRestRatio = 0;
-        [ObservableProperty]
-        private int currentMonthTotalDays = 0;
-        [ObservableProperty]
-        private TimeOnly currentMonthMostWorked;
-        [ObservableProperty]
-        private TimeOnly currentMonthAverageWorked;
-        [ObservableProperty]
-        private DateOnly currentMonthMostWorkedDate;
+        private DateOnly _recordMostWorkedDate;
 
         [ObservableProperty]
-        private TimeOnly currentMonthMostRested;
-        [ObservableProperty]
-        private DateOnly currentMonthMostRestedDate;
+        private TimeOnly _recordMostRested;
 
         [ObservableProperty]
-        private float previousMonthWorkRestRatio = 0;
-        [ObservableProperty]
-        private int previousMonthTotalDays = 0;
-        [ObservableProperty]
-        private TimeOnly previousMonthMostWorked;
-        [ObservableProperty]
-        private TimeOnly previousMonthAverageWorked;
-        [ObservableProperty]
-        private DateOnly previousMonthMostWorkedDate;
+        private DateOnly _recordMostRestedDate;
 
         [ObservableProperty]
-        private TimeOnly previousMonthMostRested;
-        [ObservableProperty]
-        private DateOnly previousMonthMostRestedDate;
+        private float _currentMonthWorkRestRatio;
 
-        private StatisticsRepository databaseHandler;
-        private DataStorageFeature dataStorageFeature;
-        private IWindowService<SecondWindowPageBase> secondWindowService;
-        public StatisticsViewModel(StatisticsRepository databaseHandler, DataStorageFeature dataStorageFeature, IWindowService<SecondWindowPageBase> secondWindowService)
+        [ObservableProperty]
+        private int _currentMonthTotalDays;
+
+        [ObservableProperty]
+        private TimeOnly _currentMonthMostWorked;
+
+        [ObservableProperty]
+        private TimeOnly _currentMonthAverageWorked;
+
+        [ObservableProperty]
+        private DateOnly _currentMonthMostWorkedDate;
+
+        [ObservableProperty]
+        private TimeOnly _currentMonthMostRested;
+
+        [ObservableProperty]
+        private DateOnly _currentMonthMostRestedDate;
+
+        [ObservableProperty]
+        private float _previousMonthWorkRestRatio;
+
+        [ObservableProperty]
+        private int _previousMonthTotalDays;
+
+        [ObservableProperty]
+        private TimeOnly _previousMonthMostWorked;
+
+        [ObservableProperty]
+        private TimeOnly _previousMonthAverageWorked;
+
+        [ObservableProperty]
+        private DateOnly _previousMonthMostWorkedDate;
+
+        [ObservableProperty]
+        private TimeOnly _previousMonthMostRested;
+
+        [ObservableProperty]
+        private DateOnly _previousMonthMostRestedDate;
+
+        public StatisticsViewModel(StatisticsStore store, DataStorageFeature dataStorage, IWindowService<SecondWindowPageBase> secondWindowService)
         {
+            _store = store;
+            _dataStorage = dataStorage;
+            _secondWindowService = secondWindowService;
             PageHeight = 580;
             PageWidth = 750;
             PageName = "View Data";
-            this.secondWindowService = secondWindowService;
-            this.databaseHandler = databaseHandler;
-            this.dataStorageFeature = dataStorageFeature;
-
             _ = CalculateData();
         }
 
-        public override Task OnPageClosingAsync() => Task.CompletedTask;
-
-        public override async Task OnPageOpeningAsync(object? args = null)
-        {
-            await CalculateData();
-        }
+        public override async Task OnPageOpeningAsync(object? args = null) => await CalculateData();
 
         private async Task CalculateData()
         {
-            DateOnly currentDate = dataStorageFeature.TodayData.DateC;
-            DateOnly previousMonthDateTime = currentDate.AddMonths(-1);
+            var currentDate = _dataStorage.TodayData.DateC;
+            var previousDate = currentDate.AddMonths(-1);
 
             await CalculateCurrentMonth(currentDate);
-            await CalculatePreviousMonth(previousMonthDateTime);
+            await CalculatePreviousMonth(previousDate);
             await CalculateRecord();
-            CalculateWorkRatios(currentDate, previousMonthDateTime);
+            CalculateWorkRatios();
         }
 
         private async Task CalculateRecord()
         {
-            DayData TempDay;
+            var day = await _store.GetMaxValue("WorkedAmmount");
+            RecordMostWorked = day.WorkedAmmountC;
+            RecordMostWorkedDate = day.DateC;
 
-            TempDay = await databaseHandler.GetMaxValue("WorkedAmmount");
-
-            RecordMostWorked = TempDay.WorkedAmmountC;
-            RecordMostWorkedDate = TempDay.DateC;
-
-            TempDay = await databaseHandler.GetMaxValue("RestedAmmount");
-
-            RecordMostRested = TempDay.RestedAmmountC;
-            RecordMostRestedDate = TempDay.DateC;
+            day = await _store.GetMaxValue("RestedAmmount");
+            RecordMostRested = day.RestedAmmountC;
+            RecordMostRestedDate = day.DateC;
         }
-        private async Task CalculateCurrentMonth(DateOnly currentDate)
+
+        private async Task CalculateCurrentMonth(DateOnly date)
         {
             try
             {
+                var (month, year) = (date.ToString("MM"), date.ToString("yyyy"));
 
-                DayData TempDay;
+                CurrentMonthAverageWorked = ConvertSecondsToTime(await _store.GetAvgSecondsTimeOnly("WorkedAmmount", month));
 
-                int MonthToporkedSeconds = await databaseHandler.GetAvgSecondsTimeOnly("WorkedAmmount", currentDate.ToString("MM"));
-                CurrentMonthAverageWorked = ConvertSecondsToTime(MonthToporkedSeconds);
+                var day = await _store.GetMaxValue("WorkedAmmount", month, year);
+                CurrentMonthMostWorked = day.WorkedAmmountC;
+                CurrentMonthMostWorkedDate = day.DateC;
 
-                TempDay = await databaseHandler.GetMaxValue("WorkedAmmount", currentDate.ToString("MM"), currentDate.ToString("yyyy"));
-                CurrentMonthMostWorked = TempDay.WorkedAmmountC;
-                CurrentMonthMostWorkedDate = TempDay.DateC;
+                day = await _store.GetMaxValue("RestedAmmount", month, year);
+                CurrentMonthMostRested = day.RestedAmmountC;
+                CurrentMonthMostRestedDate = day.DateC;
 
-                TempDay = await databaseHandler.GetMaxValue("RestedAmmount", currentDate.ToString("MM"), currentDate.ToString("yyyy"));
-
-                CurrentMonthMostRested = TempDay.RestedAmmountC;
-                CurrentMonthMostRestedDate = TempDay.DateC;
-                CurrentMonthTotalDays = await databaseHandler.ReadCountInMonth
-                    (
-                        currentDate.ToString("MM"), 
-                        currentDate.ToString("yyyy")
-                    );
+                CurrentMonthTotalDays = await _store.ReadCountInMonth(month, year);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                Console.WriteLine(ex);
+                Log.Error(ex, "Failed to calculate the current month");
             }
         }
 
-        private async Task CalculatePreviousMonth(DateOnly previousDate)
+        private async Task CalculatePreviousMonth(DateOnly date)
         {
-            DayData TempDay;
+            var (month, year) = (date.ToString("MM"), date.ToString("yyyy"));
 
-            int MonthToporkedSeconds = await databaseHandler.GetAvgSecondsTimeOnly("WorkedAmmount", previousDate.ToString("MM"));
-            PreviousMonthAverageWorked = ConvertSecondsToTime(MonthToporkedSeconds);
+            PreviousMonthAverageWorked = ConvertSecondsToTime(await _store.GetAvgSecondsTimeOnly("WorkedAmmount", month));
 
-            TempDay = await databaseHandler.GetMaxValue("WorkedAmmount", previousDate.ToString("MM"), previousDate.ToString("yyyy"));
-            PreviousMonthMostWorked = TempDay.WorkedAmmountC;
-            PreviousMonthMostWorkedDate = TempDay.DateC;
+            var day = await _store.GetMaxValue("WorkedAmmount", month, year);
+            PreviousMonthMostWorked = day.WorkedAmmountC;
+            PreviousMonthMostWorkedDate = day.DateC;
 
-            TempDay = await databaseHandler.GetMaxValue("RestedAmmount", previousDate.ToString("MM"), previousDate.ToString("yyyy"));
+            day = await _store.GetMaxValue("RestedAmmount", month, year);
+            PreviousMonthMostRested = day.RestedAmmountC;
+            PreviousMonthMostRestedDate = day.DateC;
 
-            PreviousMonthMostRested = TempDay.RestedAmmountC;
-            PreviousMonthMostRestedDate = TempDay.DateC;
-            PreviousMonthTotalDays = await databaseHandler.ReadCountInMonth
-                    (
-                        previousDate.ToString("MM"),
-                        previousDate.ToString("yyyy")
-                    );
+            PreviousMonthTotalDays = await _store.ReadCountInMonth(month, year);
         }
 
-        private void CalculateWorkRatios(DateOnly currentDate, DateOnly previousDate)
+        // Average work divided by 24 hours
+        private void CalculateWorkRatios()
         {
-            float MonthToporkedSeconds = ConvertTimeToSeconds(PreviousMonthAverageWorked);
-
-            PreviousMonthWorkRestRatio = MonthToporkedSeconds == 0 ? 0 : MonthToporkedSeconds / 86400;
-            PreviousMonthWorkRestRatio = (float)Math.Round(PreviousMonthWorkRestRatio, 2);
-
-            MonthToporkedSeconds = ConvertTimeToSeconds(CurrentMonthAverageWorked);
-
-            CurrentMonthWorkRestRatio = MonthToporkedSeconds == 0 ? 0 : MonthToporkedSeconds / 86400;
-            CurrentMonthWorkRestRatio = (float)Math.Round(CurrentMonthWorkRestRatio, 2);
+            PreviousMonthWorkRestRatio = (float)Math.Round(ConvertTimeToSeconds(PreviousMonthAverageWorked) / SecondsInADay, 2);
+            CurrentMonthWorkRestRatio = (float)Math.Round(ConvertTimeToSeconds(CurrentMonthAverageWorked) / SecondsInADay, 2);
         }
 
-        private TimeOnly ConvertSecondsToTime(int seconds)
-        {
-            int minutes = 0;
-            int hours = 0;
-            if (seconds != 0)
-            {
-                minutes = seconds / 60;
-                seconds = seconds % 60;
+        private static TimeOnly ConvertSecondsToTime(int seconds) => new(seconds / 3600, seconds / 60 % 60, seconds % 60);
 
-                hours = minutes == 0 ? 0 : minutes / 60;
-                minutes = minutes % 60;
-            }
-            return new TimeOnly(hours,minutes,seconds);
-        }
-
-        private int ConvertTimeToSeconds(TimeOnly time)
-        {
-            int seconds = 0;
-
-            seconds += time.Second;
-            seconds += time.Minute * 60;
-            seconds += time.Hour * 60 * 60;
-
-            return seconds;
-        }
+        private static int ConvertTimeToSeconds(TimeOnly time) => time.Hour * 3600 + time.Minute * 60 + time.Second;
 
         [RelayCommand]
-        private void SeePreviousMonth()
-        {
-            secondWindowService.OpenWith<DaysViewModel>(2);
-        }
+        private void SeePreviousMonth() => _secondWindowService.OpenWith<DaysViewModel>(DaysRange.PreviousMonth);
 
         [RelayCommand]
-        private void SeeCurrentMonth()
-        {
-            secondWindowService.OpenWith<DaysViewModel>(1);
-        }
+        private void SeeCurrentMonth() => _secondWindowService.OpenWith<DaysViewModel>(DaysRange.CurrentMonth);
 
         [RelayCommand]
-        private void SeeAllDays()
-        {
-            secondWindowService.OpenWith<DaysViewModel>(0);
-        }
+        private void SeeAllDays() => _secondWindowService.OpenWith<DaysViewModel>(DaysRange.All);
     }
 }

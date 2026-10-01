@@ -1,53 +1,48 @@
-﻿using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using WorkLifeBalance.Shared.Navigation;
-namespace WorkLifeBalance.Features.WorkApps;
 
-public partial class AddUrlViewModel: PopupWindowPageBase
+namespace WorkLifeBalance.Features.WorkApps
 {
-    private readonly IWindowService<PopupWindowPageBase> windowService;
-
-    [ObservableProperty] 
-    private string urls = string.Empty;
-
-    public AddUrlViewModel(IWindowService<PopupWindowPageBase> windowService)
+    // Popup to type the working pages by hand, separated by '|'. Closing it sends them back to WorkAppsViewModel.
+    public partial class AddUrlViewModel : PopupWindowPageBase
     {
-        PageHeight = 320;
-        PageWidth = 300;
-        PageName = "Enter \"working\" URLs";
-        this.windowService = windowService;
-    }
+        private readonly IWindowService<PopupWindowPageBase> _windowService;
 
-    public override Task OnPageOpeningAsync(object? args = null)
-    {
-        if (args is string urlStr)
+        [ObservableProperty]
+        private string _urls = string.Empty;
+
+        public AddUrlViewModel(IWindowService<PopupWindowPageBase> windowService)
         {
-            Urls = urlStr;
+            _windowService = windowService;
+            PageHeight = 320;
+            PageWidth = 300;
+            PageName = "Enter \"working\" URLs";
         }
-        
-        return Task.CompletedTask;
-    }
 
-    public override Task OnPageClosingAsync()
-    {
-        WeakReferenceMessenger.Default.Send(new UrlsMessage(urls));
-        WeakReferenceMessenger.Default.Send(new PopupCloseMessage());
-        return Task.CompletedTask;
-    }
+        public override Task OnPageOpeningAsync(object? args = null)
+        {
+            if (args is string urls)
+                Urls = urls;
 
-    public void Receive(UrlsMessage? message)
-    {
-       if(message != null)
-       {
-            Urls = message.Value;
-       }
-    }
+            return Task.CompletedTask;
+        }
 
-    [RelayCommand]
-    private async Task ClosePage()
-    {
-        await windowService.Close();
+        public override Task OnPageClosingAsync()
+        {
+            WeakReferenceMessenger.Default.Send(new UrlsMessage(Urls));
+            WeakReferenceMessenger.Default.Send(new PopupCloseMessage());
+            return Task.CompletedTask;
+        }
+
+        public void Receive(UrlsMessage? message)
+        {
+            if (message != null)
+                Urls = message.Value;
+        }
+
+        [RelayCommand]
+        private async Task ClosePage() => await _windowService.Close();
     }
 }

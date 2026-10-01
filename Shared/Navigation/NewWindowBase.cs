@@ -1,17 +1,16 @@
-﻿using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
-namespace WorkLifeBalance.Shared.Navigation;
 
-public abstract class NewWindowBase<TViewModel> : ObservableObject
-    where TViewModel : PageViewModelBase
+namespace WorkLifeBalance.Shared.Navigation
 {
-    // ReSharper disable once MemberCanBeProtected.Global
-    public IWindowService<TViewModel> WindowService { get; set; }
-
-    protected NewWindowBase(IWindowService<TViewModel> windowService)
+    public abstract class NewWindowBase<TViewModel> : ObservableObject where TViewModel : PageViewModelBase
     {
-        this.WindowService = windowService;
-    }
+        protected NewWindowBase(IWindowService<TViewModel> windowService)
+        {
+            WindowService = windowService;
+        }
 
-    protected abstract Task CloseWindow();
+        public IWindowService<TViewModel> WindowService { get; }
+
+        protected abstract Task CloseWindow();
+    }
 }

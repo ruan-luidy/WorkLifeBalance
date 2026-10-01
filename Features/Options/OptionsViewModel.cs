@@ -1,57 +1,42 @@
-﻿using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
 using WorkLifeBalance.Features.ForceWork;
 using WorkLifeBalance.Features.Settings;
 using WorkLifeBalance.Features.WorkApps;
 using WorkLifeBalance.Shared.Native;
 using WorkLifeBalance.Shared.Navigation;
+
 namespace WorkLifeBalance.Features.Options
 {
     public partial class OptionsViewModel : SecondWindowPageBase
     {
-        private readonly IWindowService<SecondWindowPageBase> secondWindowService;
-        private readonly LowLevelHandler LowLevelHandler;
+        private const string DonationsLink = "https://buymeacoffee.com/RoberBot";
+        private const string FeedbackLink = "https://docs.google.com/forms/d/e/1FAIpQLSfkPDHOLysWAPLZc9pdLFyRmiFxlVBN0xefXFcZ7XACOnnPhw/viewform?usp=sf_link";
+
+        private readonly IWindowService<SecondWindowPageBase> _secondWindowService;
+        private readonly LowLevelHandler _lowLevelHandler;
+
         public OptionsViewModel(IWindowService<SecondWindowPageBase> secondWindowService, LowLevelHandler lowLevelHandler)
         {
-            this.secondWindowService = secondWindowService;
+            _secondWindowService = secondWindowService;
+            _lowLevelHandler = lowLevelHandler;
             PageHeight = 320;
             PageWidth = 250;
             PageName = "Options";
-            LowLevelHandler = lowLevelHandler;
-        }
-        public override Task OnPageClosingAsync() => Task.CompletedTask;
-
-        public override Task OnPageOpeningAsync(object? args = null) => Task.CompletedTask;
-
-        [RelayCommand]
-        private void OpenSettings()
-        {
-            secondWindowService.OpenWith<SettingsViewModel>();
         }
 
         [RelayCommand]
-        private void ConfigureAutoDetect()
-        {
-            secondWindowService.OpenWith<WorkAppsViewModel>();
-        }
+        private void OpenSettings() => _secondWindowService.OpenWith<SettingsViewModel>();
 
         [RelayCommand]
-        private void OpenDonations()
-        {
-            LowLevelHandler.OpenLink("https://buymeacoffee.com/RoberBot");
-        }
+        private void ConfigureAutoDetect() => _secondWindowService.OpenWith<WorkAppsViewModel>();
 
         [RelayCommand]
-        private void OpenFeedback()
-        {
-
-            LowLevelHandler.OpenLink(@"https://docs.google.com/forms/d/e/1FAIpQLSfkPDHOLysWAPLZc9pdLFyRmiFxlVBN0xefXFcZ7XACOnnPhw/viewform?usp=sf_link");
-        }
+        private void OpenForceWork() => _secondWindowService.OpenWith<ForceWorkViewModel>();
 
         [RelayCommand]
-        private void OpenForceWork()
-        {
-            secondWindowService.OpenWith<ForceWorkViewModel>();
-        }
+        private void OpenDonations() => _lowLevelHandler.OpenLink(DonationsLink);
+
+        [RelayCommand]
+        private void OpenFeedback() => _lowLevelHandler.OpenLink(FeedbackLink);
     }
 }

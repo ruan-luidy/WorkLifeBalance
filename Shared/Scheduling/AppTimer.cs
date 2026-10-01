@@ -1,73 +1,56 @@
-﻿using Serilog;
-using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+using Serilog;
 using WorkLifeBalance.Shared.Data;
+
 namespace WorkLifeBalance.Shared.Scheduling
 {
-    //Main timer that runs once a second, other features can subscribe to it and have their own run interval
+    // Main timer that runs once a second, other features can subscribe to it and have their own run interval
     public class AppTimer
     {
-        private readonly DataStorageFeature dataStorageFeature;
-        private event Func<Task>? OnTimerTick;
-        private CancellationTokenSource CancelTick = new();
+        private readonly DataStorageFeature _dataStorage;
+        private CancellationTokenSource _cancelTick = new();
 
-        public AppTimer(DataStorageFeature dataStorageFeature)
+        public AppTimer(DataStorageFeature dataStorage)
         {
-            this.dataStorageFeature = dataStorageFeature;
+            _dataStorage = dataStorage;
         }
+
+        private event Func<Task>? OnTimerTick;
 
         public void StartTick()
         {
-            CancelTick.Cancel();
-
-            CancelTick = new();
-
-            _ = TimerLoop(CancelTick.Token);
+            _cancelTick.Cancel();
+            _cancelTick = new();
+            _ = TimerLoop(_cancelTick.Token);
         }
 
-        public bool IsFeaturePresent(Func<Task> eventname)
+        public void Stop() => _cancelTick.Cancel();
+
+        public bool IsFeaturePresent(Func<Task> feature) => OnTimerTick?.GetInvocationList().Contains(feature) == true;
+
+        public void Subscribe(Func<Task> feature)
         {
-            if (OnTimerTick != null)
-            {
-                return OnTimerTick.GetInvocationList().Contains(eventname);
-            }
-            return false;
+            if (IsFeaturePresent(feature))
+                return;
+
+            OnTimerTick += feature;
+            Log.Information("{Feature} subscribed to the main timer", feature.Method.Name);
         }
 
-        public void Subscribe(Func<Task> eventname)
+        public void UnSubscribe(Func<Task> feature)
         {
-            if (OnTimerTick != null)
-            {
-                if (OnTimerTick.GetInvocationList().Contains(eventname)) return;
-            }
-            OnTimerTick += eventname;
-            Log.Information($"{eventname.Method.Name} Subscribed to Main Timer");
-        }
+            if (!IsFeaturePresent(feature))
+                return;
 
-        public void UnSubscribe(Func<Task> eventname)
-        {
-            if (OnTimerTick == null) return;
-
-            if (OnTimerTick.GetInvocationList().Contains(eventname))
-            {
-                OnTimerTick -= eventname;
-                Log.Information($"{eventname.Method.Name} UnSubscribed from Main Timer");
-            }
-        }
-
-        public void Stop()
-        {
-            CancelTick.Cancel();
+            OnTimerTick -= feature;
+            Log.Information("{Feature} unsubscribed from the main timer", feature.Method.Name);
         }
 
         private async Task TimerLoop(CancellationToken token)
         {
             while (!token.IsCancellationRequested)
             {
-                //stop the timer if the app is not ready or is closing
-                if (!dataStorageFeature.IsAppReady && dataStorageFeature.IsClosingApp)
+                // stop the timer if the app is not ready or is closing
+                if (!_dataStorage.IsAppReady && _dataStorage.IsClosingApp)
                 {
                     Stop();
                     return;
@@ -75,9 +58,9 @@ namespace WorkLifeBalance.Shared.Scheduling
 
                 try
                 {
-                    //Delay the triggering of the main event to pause every feature from being
-                    //triggered while saving, so data is not updated while is saving
-                    if (dataStorageFeature.IsAppSaving)
+                    // Delay the triggering of the main event to pause every feature from being
+                    // triggered while saving, so data is not updated while is saving
+                    if (_dataStorage.IsAppSaving)
                     {
                         await Task.Delay(500, token);
                         continue;
@@ -87,7 +70,7 @@ namespace WorkLifeBalance.Shared.Scheduling
                 }
                 catch (TaskCanceledException taskCancel)
                 {
-                    Log.Information($"App Timer: {taskCancel.Message}");
+                    Log.Information("App Timer: {Message}", taskCancel.Message);
                 }
                 catch (Exception ex)
                 {

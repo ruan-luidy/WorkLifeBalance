@@ -1,53 +1,41 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace WorkLifeBalance.Shared.Scheduling
 {
+    // Base class for every feature, it cancels the feature delay if the feature is removed.
+    // Features use a bool to ignore the main timer event while they are running: if the main timer
+    // runs every second and a feature has a 5 minute interval, it runs once, then ignores the
+    // main timer for 5 minutes and repeats.
     public abstract class FeatureBase
     {
-        //base class for every feature, it cancels the feature delay if feature removed.
-        //features use a bool to ignore the main timer event when the feature was triggered
-        //if the main timer runs every second and a feature has a 5 minute trigger interval
-        //it will run once then ignore the main timer for 5 minutes and repeat.
-        protected CancellationTokenSource CancelTokenS { get; set; } = new();
+        protected CancellationTokenSource CancelTokenSource { get; set; } = new();
 
-        public bool IsFeatureRuning { get; set; }
+        public bool IsFeatureRunning { get; set; }
 
-        //used to add the current feature and create a new canceltoken,returns overrided method
         public Func<Task> AddFeature()
         {
-            IsFeatureRuning = false;
-            CancelTokenS = new();
+            IsFeatureRunning = false;
+            CancelTokenSource = new();
             OnFeatureAdded();
             return ReturnFeatureMethod();
         }
 
-        //get the method
-        public Func<Task> GetFeature()
-        {
-            return ReturnFeatureMethod();
-        }
+        public Func<Task> GetFeature() => ReturnFeatureMethod();
 
-        //used to remove the feature, cancels the features and returns the specific method
-        //that needs to be removed from main timer
         public Func<Task> RemoveFeature()
         {
-            CancelToken();
+            CancelTokenSource.Cancel();
+            CancelTokenSource = new();
             OnFeatureRemoved();
             return ReturnFeatureMethod();
         }
 
-        //override in childrens to return the feature specific main method
         protected abstract Func<Task> ReturnFeatureMethod();
 
-        protected virtual void OnFeatureAdded() { }
-        protected virtual void OnFeatureRemoved() { }
-
-        private void CancelToken()
+        protected virtual void OnFeatureAdded()
         {
-            CancelTokenS.Cancel();
-            CancelTokenS = new();
+        }
+
+        protected virtual void OnFeatureRemoved()
+        {
         }
     }
 }

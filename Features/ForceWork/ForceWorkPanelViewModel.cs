@@ -1,60 +1,55 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System;
-using System.Threading.Tasks;
 using WorkLifeBalance.Features.Tracking;
 using WorkLifeBalance.Shared.Navigation;
 using WorkLifeBalance.Shared.Scheduling;
+
 namespace WorkLifeBalance.Features.ForceWork
 {
     public partial class ForceWorkPanelViewModel : MainWindowDetailsPageBase
     {
+        private readonly ForceWorkFeature _forceWorkFeature;
+        private readonly IWindowService<SecondWindowPageBase> _secondWindowService;
+        private readonly IFeaturesService _featuresService;
 
         [ObservableProperty]
-        private AppState requiredAppState;
+        private AppState _requiredAppState;
 
         [ObservableProperty]
-        private TimeOnly currentStageTimeRemaining;
+        private TimeOnly _currentStageTimeRemaining;
 
         [ObservableProperty]
-        private TimeOnly totalWorkTimeRemaining;
+        private TimeOnly _totalWorkTimeRemaining;
 
-        private readonly ForceWorkFeature forceWorkFeature;
-        private readonly IWindowService<SecondWindowPageBase> secondWindowService;
-        private readonly IFeaturesServices featuresServices;
-
-        public ForceWorkPanelViewModel(ForceWorkFeature forceWorkFeature, IWindowService<SecondWindowPageBase> secondWindowService, IFeaturesServices featuresServices)
+        public ForceWorkPanelViewModel(ForceWorkFeature forceWorkFeature, IWindowService<SecondWindowPageBase> secondWindowService, IFeaturesService featuresService)
         {
-            this.forceWorkFeature = forceWorkFeature;
-            this.secondWindowService = secondWindowService;
-            this.featuresServices = featuresServices;
+            _forceWorkFeature = forceWorkFeature;
+            _secondWindowService = secondWindowService;
+            _featuresService = featuresService;
         }
 
         public override Task OnPageOpeningAsync(object? args = null)
         {
-            forceWorkFeature.OnDataUpdated += UpdateDataFromForceWork;
+            _forceWorkFeature.OnDataUpdated += UpdateDataFromForceWork;
             UpdateDataFromForceWork();
             return Task.CompletedTask;
         }
 
         public override Task OnPageClosingAsync()
         {
-            forceWorkFeature.OnDataUpdated -= UpdateDataFromForceWork;
-            featuresServices.RemoveFeature<ForceWorkFeature>();
+            _forceWorkFeature.OnDataUpdated -= UpdateDataFromForceWork;
+            _featuresService.RemoveFeature<ForceWorkFeature>();
             return Task.CompletedTask;
         }
 
         private void UpdateDataFromForceWork()
         {
-            RequiredAppState = forceWorkFeature.RequiredAppState;
-            CurrentStageTimeRemaining = forceWorkFeature.CurrentStageTimeRemaining;
-            TotalWorkTimeRemaining = forceWorkFeature.TotalWorkTimeRemaining;
+            RequiredAppState = _forceWorkFeature.RequiredAppState;
+            CurrentStageTimeRemaining = _forceWorkFeature.CurrentStageTimeRemaining;
+            TotalWorkTimeRemaining = _forceWorkFeature.TotalWorkTimeRemaining;
         }
 
         [RelayCommand]
-        private void EditForceWork()
-        {
-            secondWindowService.OpenWith<ForceWorkViewModel>();
-        }
+        private void EditForceWork() => _secondWindowService.OpenWith<ForceWorkViewModel>();
     }
 }

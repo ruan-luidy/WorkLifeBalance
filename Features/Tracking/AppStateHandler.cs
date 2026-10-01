@@ -1,32 +1,33 @@
-﻿using Serilog;
-using System;
+using Serilog;
+
 namespace WorkLifeBalance.Features.Tracking
 {
     public class AppStateHandler
     {
+        private AppState _appTimerState = AppState.Resting;
+
         public event Action<AppState>? OnStateChanges;
-        
-        private AppState appTimerState = AppState.Resting;
+
         public AppState AppTimerState
         {
-            get
-            {
-                return appTimerState;
-            }
+            get => _appTimerState;
             set
             {
-                if (appTimerState == value) return;
-                appTimerState = value;
-                OnStateChanges?.Invoke(appTimerState);
+                if (_appTimerState == value)
+                    return;
+
+                _appTimerState = value;
+                OnStateChanges?.Invoke(value);
             }
         }
 
         public void SetAppState(AppState state)
         {
-            if (AppTimerState == state) return;
+            if (AppTimerState == state)
+                return;
 
             AppTimerState = state;
-            Log.Information($"App state changed to {state}");
+            Log.Information("App state changed to {State}", state);
         }
     }
 }

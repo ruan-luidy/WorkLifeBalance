@@ -18,7 +18,7 @@
             <RowDefinition/>
             <RowDefinition Height="45"/>
         </Grid.RowDefinitions>
-        <Grid Visibility="{Binding IsFeatureActiv, Converter= {StaticResource BoolToCollapsedConverter}, FallbackValue=Visible}">
+        <Grid Visibility="{Binding IsFeatureActive, Converter= {StaticResource BoolToCollapsedConverter}, FallbackValue=Visible}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="200"/>
                 <ColumnDefinition/>
@@ -213,7 +213,7 @@
                 </StackPanel>
             </Border>
         </Grid>
-        <Grid Visibility="{Binding IsFeatureActiv, Converter= {StaticResource BoolToVisibleConverter}, FallbackValue=Collapsed}">
+        <Grid Visibility="{Binding IsFeatureActive, Converter= {StaticResource BoolToVisibleConverter}, FallbackValue=Collapsed}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="200"/>
                 <ColumnDefinition/>
@@ -386,10 +386,10 @@
                         <Style TargetType="TextBlock">
                             <Setter Property="Text" Value="Start" />
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsFeatureActiv}" Value="True">
+                                <DataTrigger Binding="{Binding IsFeatureActive}" Value="True">
                                     <Setter Property="Text" Value="Stop" />
                                 </DataTrigger>
-                                <DataTrigger Binding="{Binding IsFeatureActiv}" Value="False">
+                                <DataTrigger Binding="{Binding IsFeatureActive}" Value="False">
                                     <Setter Property="Text" Value="Start" />
                                 </DataTrigger>
                             </Style.Triggers>

@@ -1,31 +1,23 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Input;
+
 namespace WorkLifeBalance.Shell
 {
-    /// <summary>
-    /// Interaction logic for SecondWindow.xaml
-    /// </summary>
-    /// //use it in dependency injection, make searate method for req windows
     public partial class SecondWindow : Window
     {
-        private readonly SecondWindowViewModel ViewModel;
-
         public SecondWindow(SecondWindowViewModel viewModel)
         {
             Topmost = true;
-            ViewModel = viewModel;
-            DataContext = ViewModel;
-            ViewModel.OnShowView += Show;
-            ViewModel.OnHideView += Hide;
+            DataContext = viewModel;
+            viewModel.OnShowView += Show;
+            viewModel.OnHideView += Hide;
             InitializeComponent();
         }
 
         private void MoveWindow(object sender, MouseButtonEventArgs e)
         {
             if (e.LeftButton == MouseButtonState.Pressed)
-            {
                 DragMove();
-            }
         }
     }
 }

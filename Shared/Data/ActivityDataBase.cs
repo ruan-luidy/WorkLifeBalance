@@ -1,54 +1,35 @@
-﻿using System;
+using Serilog;
 
-namespace WorkLifeBalance.Shared.Data;
-
-public abstract class ActivityDataBase
+namespace WorkLifeBalance.Shared.Data
 {
-    public abstract string Date { get; set; } 
-    public abstract string TimeSpent { get; set; }
-
-    public DateOnly DateC { get; set; } = DateOnly.FromDateTime(DateTime.Now);
-    public TimeOnly TimeSpentC { get; set; } = new TimeOnly(0, 0, 0);
-
-    public virtual void ConvertSaveDataToUsableData()
+    public abstract class ActivityDataBase
     {
-        try
+        public abstract string Date { get; set; }
+        public abstract string TimeSpent { get; set; }
+
+        public DateOnly DateC { get; set; } = DateOnly.FromDateTime(DateTime.Now);
+        public TimeOnly TimeSpentC { get; set; } = new(0, 0, 0);
+
+        public virtual void ConvertSaveDataToUsableData()
         {
             if (string.IsNullOrEmpty(Date))
-            {
                 return;
+
+            try
+            {
+                DateC = StoredFormat.ParseDate(Date);
+                TimeSpentC = StoredFormat.ParseTime(TimeSpent);
             }
-
-            DateC = new DateOnly
-            (
-                int.Parse(Date.Substring(4, 4)),
-                int.Parse(Date.Substring(0, 2)),
-                int.Parse(Date.Substring(2, 2))
-            );
-
-            TimeSpentC = new TimeOnly
-            (
-                int.Parse(TimeSpent.Substring(0, 2)),
-                int.Parse(TimeSpent.Substring(2, 2)),
-                int.Parse(TimeSpent.Substring(4, 2))
-            );
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Activity: failed to convert data to usable data");
+            }
         }
-        catch (Exception ex)
-        {
-            //MainWindow.ShowErrorBox("ProcessActivity Error", "Failed to convert data to usable data", ex);
-        }
-    }
-    public virtual void ConvertUsableDataToSaveData()
-    {
-        try
-        {
-            Date = DateC.ToString("MMddyyyy");
 
-            TimeSpent = TimeSpentC.ToString("HHmmss");
-        }
-        catch (Exception ex)
+        public virtual void ConvertUsableDataToSaveData()
         {
-            //MainWindow.ShowErrorBox("ProcessActivity Error", "Failed to convert usable data to save data", ex);
+            Date = DateC.ToString(StoredFormat.Date);
+            TimeSpent = TimeSpentC.ToString(StoredFormat.Time);
         }
     }
 }

@@ -1,107 +1,82 @@
-﻿using Serilog;
-using System;
-using System.Threading.Tasks;
+using Serilog;
 using WorkLifeBalance.Shared.Data;
 using WorkLifeBalance.Shared.Native;
 using WorkLifeBalance.Shared.Scheduling;
-namespace WorkLifeBalance.Features.Tracking;
 
-public class ActivityTrackerFeature : FeatureBase
+namespace WorkLifeBalance.Features.Tracking
 {
-    public delegate void ActiveProcess(string ActiveWindow);
-
-    public delegate void ActivePage(string activePage);
-
-    public event ActiveProcess? OnWindowChange;
-
-    public event ActivePage? OnPageChange;
-
-    public string ActiveWindow { get; set; } = "";
-    public string ActiveUrl { get; set; } = "";
-
-    private readonly TimeSpan OneSec = new(0, 0, 1);
-
-    private readonly LowLevelHandler lowLevelHandler;
-    private readonly DataStorageFeature dataStorageFeature;
-
-    public ActivityTrackerFeature(LowLevelHandler lowLevelHandler, DataStorageFeature dataStorageFeature)
+    // Records the time spent on the focused process and, for browsers, on the host of the active tab
+    public class ActivityTrackerFeature : FeatureBase
     {
-        this.lowLevelHandler = lowLevelHandler;
-        this.dataStorageFeature = dataStorageFeature;
-    }
+        private static readonly TimeSpan OneSecond = TimeSpan.FromSeconds(1);
 
-    protected override Func<Task> ReturnFeatureMethod()
-    {
-        return TriggerRecordActivity;
-    }
+        private readonly LowLevelHandler _lowLevelHandler;
+        private readonly DataStorageFeature _dataStorage;
 
-    private Task TriggerRecordActivity()
-    {
-        try
+        public ActivityTrackerFeature(LowLevelHandler lowLevelHandler, DataStorageFeature dataStorage)
         {
-            nint foregroundWindowHandle = lowLevelHandler.ReadForegroundWindow();
+            _lowLevelHandler = lowLevelHandler;
+            _dataStorage = dataStorage;
+        }
 
-            ActiveWindow = lowLevelHandler.GetProcessWithId(foregroundWindowHandle, out uint processId);
+        public event Action<string>? OnWindowChange;
+        public event Action<string>? OnPageChange;
 
-            if (Constants.BrowserExecutables.Contains(ActiveWindow))
+        public string ActiveWindow { get; set; } = "";
+        public string ActiveUrl { get; set; } = "";
+
+        protected override Func<Task> ReturnFeatureMethod() => TriggerRecordActivity;
+
+        private Task TriggerRecordActivity()
+        {
+            try
             {
-                string? activeTab = lowLevelHandler.GetActiveTab(processId);
-                if (UrlHelper.TryGetHost(activeTab, out string? host))
+                var foregroundWindow = _lowLevelHandler.ReadForegroundWindow();
+                ActiveWindow = _lowLevelHandler.GetProcessWithId(foregroundWindow, out var processId);
+
+                if (BrowserHelper.BrowserExecutables.Contains(ActiveWindow))
                 {
-                    ActiveUrl = host;
+                    var activeTab = _lowLevelHandler.GetActiveTab(processId);
+                    if (UrlHelper.TryGetHost(activeTab, out var host))
+                    {
+                        ActiveUrl = host!;
+                        OnPageChange?.Invoke(ActiveUrl);
+                        RecordActivityForPage();
+                    }
+                }
+                else
+                {
+                    ActiveUrl = "";
                     OnPageChange?.Invoke(ActiveUrl);
                     RecordActivityForPage();
                 }
+
+                OnWindowChange?.Invoke(ActiveWindow);
             }
-            else
+            catch (Exception ex)
             {
-                ActiveUrl = "";
-                OnPageChange?.Invoke(ActiveUrl);
-                RecordActivityForPage();
+                Log.Warning(ex, "Failed to get process of window");
             }
 
-            OnWindowChange?.Invoke(ActiveWindow);
-        }
-        catch (Exception ex)
-        {
-            Log.Warning(ex, "Failed to get process of window");
+            RecordActivityForProcess();
+            return Task.CompletedTask;
         }
 
-        RecordActivityForProcess();
+        private void RecordActivityForProcess() => AddSecond(_dataStorage.AutoChangeData.ProcessActivitiesC, ActiveWindow);
 
-        return Task.CompletedTask;
-    }
-
-    private void RecordActivityForProcess()
-    {
-        try
+        private void RecordActivityForPage()
         {
-            TimeOnly IncreasedTimeSpan =
-                dataStorageFeature.AutoChangeData.ProcessActivitiesC[ActiveWindow].Add(OneSec);
-            dataStorageFeature.AutoChangeData.ProcessActivitiesC[ActiveWindow] = IncreasedTimeSpan;
-        }
-        catch
-        {
-            dataStorageFeature.AutoChangeData.ProcessActivitiesC.Add(ActiveWindow, new TimeOnly());
-        }
-    }
-
-    private void RecordActivityForPage()
-    {
-        if (string.IsNullOrEmpty(ActiveUrl))
-        {
-            return;
+            if (!string.IsNullOrEmpty(ActiveUrl))
+                AddSecond(_dataStorage.AutoChangeData.PageActivitiesC, ActiveUrl);
         }
 
-        try
+        // The first second of a new activity only creates the entry, like it always did
+        private static void AddSecond(Dictionary<string, TimeOnly> activities, string key)
         {
-            TimeOnly IncreasedTimeSpan =
-                dataStorageFeature.AutoChangeData.PageActivitiesC[ActiveUrl].Add(OneSec);
-            dataStorageFeature.AutoChangeData.PageActivitiesC[ActiveUrl] = IncreasedTimeSpan;
-        }
-        catch
-        {
-            dataStorageFeature.AutoChangeData.PageActivitiesC.Add(ActiveUrl, new TimeOnly());
+            if (activities.TryGetValue(key, out var spent))
+                activities[key] = spent.Add(OneSecond);
+            else
+                activities.Add(key, new TimeOnly());
         }
     }
 }

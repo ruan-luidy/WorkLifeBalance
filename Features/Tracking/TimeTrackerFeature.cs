@@ -1,45 +1,42 @@
-﻿using System;
-using System.Threading.Tasks;
 using WorkLifeBalance.Shared.Data;
 using WorkLifeBalance.Shared.Scheduling;
 
 namespace WorkLifeBalance.Features.Tracking
 {
+    // Adds one second to today's worked, rested or idle time on every tick
     public class TimeTrackerFeature : FeatureBase
     {
-        public delegate void SpentTimeEvent();
-        public event SpentTimeEvent? OnSpentTimeChange;
+        private static readonly TimeSpan OneSecond = TimeSpan.FromSeconds(1);
 
-        private readonly TimeSpan OneSec = new (0, 0, 1);
-        private readonly AppStateHandler appStateHandler;
-        private readonly DataStorageFeature dataStorageFeature;
-        public TimeTrackerFeature(DataStorageFeature dataStorageFeature, AppStateHandler appStateHandler)
+        private readonly DataStorageFeature _dataStorage;
+        private readonly AppStateHandler _appStateHandler;
+
+        public TimeTrackerFeature(DataStorageFeature dataStorage, AppStateHandler appStateHandler)
         {
-            this.dataStorageFeature = dataStorageFeature;
-            this.appStateHandler = appStateHandler;
+            _dataStorage = dataStorage;
+            _appStateHandler = appStateHandler;
         }
 
-        protected override Func<Task> ReturnFeatureMethod()
-        {
-            return TriggerUpdateSpentTime;
-        }
+        public event Action? OnSpentTimeChange;
+
+        protected override Func<Task> ReturnFeatureMethod() => TriggerUpdateSpentTime;
 
         private Task TriggerUpdateSpentTime()
         {
-            switch (appStateHandler.AppTimerState)
+            var today = _dataStorage.TodayData;
+            switch (_appStateHandler.AppTimerState)
             {
                 case AppState.Working:
-                    dataStorageFeature.TodayData.WorkedAmmountC = dataStorageFeature.TodayData.WorkedAmmountC.Add(OneSec);
+                    today.WorkedAmmountC = today.WorkedAmmountC.Add(OneSecond);
                     break;
-
                 case AppState.Resting:
-                    dataStorageFeature.TodayData.RestedAmmountC = dataStorageFeature.TodayData.RestedAmmountC.Add(OneSec);
+                    today.RestedAmmountC = today.RestedAmmountC.Add(OneSecond);
                     break;
-
                 case AppState.Idle:
-                    dataStorageFeature.TodayData.IdleAmmountC = dataStorageFeature.TodayData.IdleAmmountC.Add(OneSec);
+                    today.IdleAmmountC = today.IdleAmmountC.Add(OneSecond);
                     break;
             }
+
             OnSpentTimeChange?.Invoke();
             return Task.CompletedTask;
         }

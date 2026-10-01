@@ -1,58 +1,45 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System;
-using System.Threading.Tasks;
 using WorkLifeBalance.Features.Tracking;
 using WorkLifeBalance.Shared.Navigation;
 using WorkLifeBalance.Shared.Scheduling;
+
 namespace WorkLifeBalance.Features.ForceState
 {
     public partial class ForceStatePanelViewModel : MainWindowDetailsPageBase
     {
+        private readonly ForceStateFeature _forceStateFeature;
+        private readonly IFeaturesService _featuresService;
+
         [ObservableProperty]
-        private AppState forcedAppState = AppState.Resting;
+        private AppState _forcedAppState = AppState.Resting;
 
-        private readonly IFeaturesServices featuresServices;
-        private readonly ForceStateFeature forceStateFeature;
-
-        private int AppstatesCount;
-        public ForceStatePanelViewModel(ForceStateFeature forceStateFeature, IFeaturesServices featuresServices)
+        public ForceStatePanelViewModel(ForceStateFeature forceStateFeature, IFeaturesService featuresService)
         {
-            this.forceStateFeature = forceStateFeature;
-            this.featuresServices = featuresServices;
-            AppstatesCount = Enum.GetValues(typeof(AppState)).Length - 1;
-        }
-
-        partial void OnForcedAppStateChanged(AppState value)
-        {
-            forceStateFeature.SetForcedAppState(value);
-        }
-
-        [RelayCommand]
-        private void ChangeForcedState()
-        {
-            if((int)ForcedAppState == AppstatesCount)
-            {
-                ForcedAppState = 0;
-            }
-            else
-            {
-                ForcedAppState++;
-            }
+            _forceStateFeature = forceStateFeature;
+            _featuresService = featuresService;
         }
 
         public override Task OnPageOpeningAsync(object? args = null)
         {
-            forceStateFeature.SetForcedAppState(ForcedAppState);
-
+            _forceStateFeature.SetForcedAppState(ForcedAppState);
             return Task.CompletedTask;
         }
 
         public override Task OnPageClosingAsync()
         {
-            featuresServices.RemoveFeature<ForceStateFeature>();
-            
+            _featuresService.RemoveFeature<ForceStateFeature>();
             return Task.CompletedTask;
+        }
+
+        partial void OnForcedAppStateChanged(AppState value) => _forceStateFeature.SetForcedAppState(value);
+
+        // Working -> Resting -> Idle -> Working...
+        [RelayCommand]
+        private void ChangeForcedState()
+        {
+            var lastState = Enum.GetValues<AppState>().Length - 1;
+            ForcedAppState = (int)ForcedAppState == lastState ? 0 : ForcedAppState + 1;
         }
     }
 }

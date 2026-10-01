@@ -1,21 +1,51 @@
-﻿using Serilog;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Serilog;
 using WorkLifeBalance.Features.Tracking;
 using WorkLifeBalance.Shared.Data;
 using WorkLifeBalance.Shared.Native;
 using WorkLifeBalance.Shared.Navigation;
 using WorkLifeBalance.Shared.Scheduling;
 using WorkLifeBalance.Shared.Sound;
+
 namespace WorkLifeBalance.Features.ForceWork
 {
-    public partial class ForceWorkFeature : FeatureBase 
+    // Pomodoro: alternates work and rest stages and warns (then minimizes everything) when the user is
+    // distracted during work or works during the rest
+    public class ForceWorkFeature : FeatureBase
     {
-        public Action OnDataUpdated { get; set; } = new(() => { });
+        private const string WorkLifeBalanceProcess = "WorkLifeBalance.exe";
+        private const string ExplorerProcess = "explorer.exe";
+        private const int StageChangeDelay = 6000;
+        private static readonly TimeSpan MinusOneSecond = TimeSpan.FromSeconds(-1);
+
+        private readonly AppStateHandler _appStateHandler;
+        private readonly ActivityTrackerFeature _activityTracker;
+        private readonly LowLevelHandler _lowLevelHandler;
+        private readonly IFeaturesService _featuresService;
+        private readonly ISoundService _soundService;
+        private readonly IWindowService<MainWindowDetailsPageBase> _detailsService;
+        private readonly DataStorageFeature _dataStorage;
+        private readonly Dictionary<string, int> _distractionApps = new();
+
+        private int _workIterations;
+        private int _warnings;
+        private bool _distractionDetected;
+        private int _delay;
+
+        public ForceWorkFeature(AppStateHandler appStateHandler, ActivityTrackerFeature activityTracker, LowLevelHandler lowLevelHandler, IFeaturesService featuresService, ISoundService soundService, IWindowService<MainWindowDetailsPageBase> detailsService, DataStorageFeature dataStorage)
+        {
+            _appStateHandler = appStateHandler;
+            _activityTracker = activityTracker;
+            _lowLevelHandler = lowLevelHandler;
+            _featuresService = featuresService;
+            _soundService = soundService;
+            _detailsService = detailsService;
+            _dataStorage = dataStorage;
+        }
+
+        public event Action? OnDataUpdated;
+
         public AppState RequiredAppState { get; private set; } = AppState.Working;
-        public string[] Distractions { get; private set; } = Array.Empty<string>();
+        public string[] Distractions { get; private set; } = [];
         public int DistractionsCount { get; private set; }
         public int MaxWarnings { get; private set; } = 3;
 
@@ -28,108 +58,72 @@ namespace WorkLifeBalance.Features.ForceWork
         public TimeOnly TotalWorkTimeRemaining { get; private set; }
         public TimeOnly CurrentStageTimeRemaining { get; private set; }
 
-        private readonly ActivityTrackerFeature activityTrackerFeature;
-        private readonly AppStateHandler appStateHandler;
-        private readonly LowLevelHandler lowLevelHandler;
-        private readonly DataStorageFeature dataStorageFeature;
-        private readonly IFeaturesServices featuresServices;
-        private readonly IWindowService<MainWindowDetailsPageBase> mainWindowDetailsService;
-        private readonly ISoundService soundService;
-        private readonly string workLifeBalanceProcess = "WorkLifeBalance.exe";
-        private readonly string explorerProcess = "explorer.exe";
-        private Dictionary<string, int> DistractionApps = new();
- 
-        private int workIterations;
-        private int warnings;
-        private bool distractionDetected; 
-        private readonly TimeSpan minusOneSecond = new(0,0,-1);
-        private int defaultDelay = 6000;
-        private int delay;
-        public ForceWorkFeature(AppStateHandler appStateHandler, ActivityTrackerFeature activityTrackerFeature, LowLevelHandler lowLevelHandler, IFeaturesServices featuresServices, ISoundService soundService, IWindowService<MainWindowDetailsPageBase> mainWindowDetailsService, DataStorageFeature dataStorageFeature)
-        {
-            this.appStateHandler = appStateHandler;
-            this.activityTrackerFeature = activityTrackerFeature;
-            this.lowLevelHandler = lowLevelHandler;
-            this.featuresServices = featuresServices;
-            this.soundService = soundService;
-            this.mainWindowDetailsService = mainWindowDetailsService;
-            this.dataStorageFeature = dataStorageFeature;
-        }
+        private string[] WorkingWindows => _dataStorage.AutoChangeData.WorkingStateWindows;
 
         public void SetWorkTime(int hours, int minutes, int maxWarnings)
         {
-            WorkTimeSetting = new(hours, minutes);
+            WorkTimeSetting = new TimeOnly(hours, minutes);
             MaxWarnings = maxWarnings;
         }
-        public void SetRestTime(int hours, int minutes)
-        {
-            RestTimeSetting = new(hours, minutes);
-        }
+
+        public void SetRestTime(int hours, int minutes) => RestTimeSetting = new TimeOnly(hours, minutes);
+
         public void SetLongRestTime(int hours, int minutes, int interval)
         {
-            LongRestTimeSetting = new(hours, minutes);
+            LongRestTimeSetting = new TimeOnly(hours, minutes);
             LongRestIntervalSetting = interval;
         }
-        public void SetTotalWorkTime(int hours, int minutes)
-        {
-            TotalWorkTimeSetting = new(hours, minutes);
-        }
+
+        public void SetTotalWorkTime(int hours, int minutes) => TotalWorkTimeSetting = new TimeOnly(hours, minutes);
 
         protected override void OnFeatureAdded()
         {
-            //if there is no window set up as working, remove the feature
-            if(dataStorageFeature.AutoChangeData.WorkingStateWindows.Length == 0)
+            // if there is no window set up as working, remove the feature
+            if (WorkingWindows.Length == 0)
             {
-                featuresServices.RemoveFeature<ForceWorkFeature>();
-                OnDataUpdated.Invoke();
-                return;
-            }
-
-            //Reset values
-            distractionDetected = false;
-            TotalWorkTimeRemaining = TotalWorkTimeSetting;
-            CurrentStageTimeRemaining = WorkTimeSetting;
-            Distractions = Array.Empty<string>();
-            DistractionApps.Clear();
-            OnDataUpdated.Invoke();
-            DistractionsCount = 0;
-            workIterations = 0;
-            warnings = 0;
-            delay = 0;
-            mainWindowDetailsService.OpenWith<ForceWorkPanelViewModel>();
-        }
-        
-        protected override void OnFeatureRemoved()
-        {
-            mainWindowDetailsService.Close();
-        }
-
-        protected override Func<Task> ReturnFeatureMethod()
-        {
-            return TriggerForceWork;
-        }
-
-        private async Task TriggerForceWork()
-        {
-            if (IsFeatureRuning) return;
-
-            IsFeatureRuning = true;
-
-            await Task.Delay(delay);
-            ForceWorkLogic();
-            IsFeatureRuning = false;
-        }
-
-        private void ForceWorkLogic()
-        {
-            if(TotalWorkTimeRemaining == TimeOnly.MinValue)
-            {
-                featuresServices.RemoveFeature<ForceWorkFeature>();
+                _featuresService.RemoveFeature<ForceWorkFeature>();
                 OnDataUpdated?.Invoke();
                 return;
             }
 
-            delay = 0;
+            _distractionDetected = false;
+            TotalWorkTimeRemaining = TotalWorkTimeSetting;
+            CurrentStageTimeRemaining = WorkTimeSetting;
+            Distractions = [];
+            _distractionApps.Clear();
+            OnDataUpdated?.Invoke();
+            DistractionsCount = 0;
+            _workIterations = 0;
+            _warnings = 0;
+            _delay = 0;
+            _detailsService.OpenWith<ForceWorkPanelViewModel>();
+        }
+
+        protected override void OnFeatureRemoved() => _detailsService.Close();
+
+        protected override Func<Task> ReturnFeatureMethod() => TriggerForceWork;
+
+        private async Task TriggerForceWork()
+        {
+            if (IsFeatureRunning)
+                return;
+
+            IsFeatureRunning = true;
+            await Task.Delay(_delay);
+            ForceWorkLogic();
+            IsFeatureRunning = false;
+        }
+
+        private void ForceWorkLogic()
+        {
+            if (TotalWorkTimeRemaining == TimeOnly.MinValue)
+            {
+                _featuresService.RemoveFeature<ForceWorkFeature>();
+                OnDataUpdated?.Invoke();
+                return;
+            }
+
+            _delay = 0;
             switch (RequiredAppState)
             {
                 case AppState.Working:
@@ -139,6 +133,7 @@ namespace WorkLifeBalance.Features.ForceWork
                     HandleRestingTime();
                     break;
             }
+
             OnDataUpdated?.Invoke();
         }
 
@@ -146,47 +141,44 @@ namespace WorkLifeBalance.Features.ForceWork
         {
             if (CurrentStageTimeRemaining == TimeOnly.MinValue)
             {
-                workIterations++;
-                soundService.PlaySound(ISoundService.SoundType.Finish);
+                _workIterations++;
+                _soundService.PlaySound(SoundType.Finish);
                 RequiredAppState = AppState.Resting;
-                delay = defaultDelay;
+                _delay = StageChangeDelay;
 
-                if (workIterations >= LongRestIntervalSetting)
+                if (_workIterations >= LongRestIntervalSetting)
                 {
                     CurrentStageTimeRemaining = LongRestTimeSetting;
-                    workIterations = 0;
+                    _workIterations = 0;
                 }
                 else
                 {
                     CurrentStageTimeRemaining = RestTimeSetting;
                 }
+
                 return;
             }
 
-            if (activityTrackerFeature.ActiveWindow == workLifeBalanceProcess ||
-                activityTrackerFeature.ActiveWindow == explorerProcess)
+            if (_activityTracker.ActiveWindow is WorkLifeBalanceProcess or ExplorerProcess)
             {
-                distractionDetected = false;
-                warnings = 0;
+                _distractionDetected = false;
+                _warnings = 0;
                 return;
             }
 
-
-            switch (appStateHandler.AppTimerState)
+            switch (_appStateHandler.AppTimerState)
             {
                 case AppState.Working:
-                    TotalWorkTimeRemaining = TotalWorkTimeRemaining.Add(minusOneSecond);
-                    CurrentStageTimeRemaining = CurrentStageTimeRemaining.Add(minusOneSecond);
-                    warnings = 0;
-                    distractionDetected = false;
+                    TotalWorkTimeRemaining = TotalWorkTimeRemaining.Add(MinusOneSecond);
+                    CurrentStageTimeRemaining = CurrentStageTimeRemaining.Add(MinusOneSecond);
+                    _warnings = 0;
+                    _distractionDetected = false;
                     break;
                 case AppState.Resting:
-                    //handle when the app is transitioning from resting to working
-                    //there is a small time span when the app is in resting but the user is on the working apps
-                    if (!dataStorageFeature.AutoChangeData.WorkingStateWindows.Contains(activityTrackerFeature.ActiveWindow))
-                    {
+                    // handle when the app is transitioning from resting to working
+                    // there is a small time span when the app is in resting but the user is on the working apps
+                    if (!WorkingWindows.Contains(_activityTracker.ActiveWindow))
                         PunishUser();
-                    }
                     break;
                 case AppState.Idle:
                     WarnUser();
@@ -200,77 +192,71 @@ namespace WorkLifeBalance.Features.ForceWork
             {
                 RequiredAppState = AppState.Working;
                 CurrentStageTimeRemaining = WorkTimeSetting;
-                soundService.PlaySound(ISoundService.SoundType.Finish);
-                delay = defaultDelay;
+                _soundService.PlaySound(SoundType.Finish);
+                _delay = StageChangeDelay;
                 return;
             }
 
-            switch (appStateHandler.AppTimerState)
+            switch (_appStateHandler.AppTimerState)
             {
                 case AppState.Working:
-                    //handle when the app is transitioning from working to resting
-                    //there is a small time span when the app is in working but the user is on the resting apps
-                    if (dataStorageFeature.AutoChangeData.WorkingStateWindows.Contains(activityTrackerFeature.ActiveWindow))
+                    // handle when the app is transitioning from working to resting
+                    // there is a small time span when the app is in working but the user is on the resting apps
+                    if (WorkingWindows.Contains(_activityTracker.ActiveWindow))
                     {
                         PunishUser();
                         return;
                     }
                     break;
                 case AppState.Resting:
-                    warnings = 0;
+                    _warnings = 0;
                     break;
                 case AppState.Idle:
                     WarnUser();
                     break;
             }
-            CurrentStageTimeRemaining = CurrentStageTimeRemaining.Add(minusOneSecond);
+
+            CurrentStageTimeRemaining = CurrentStageTimeRemaining.Add(MinusOneSecond);
         }
 
         private void WarnUser()
         {
-            if (RequiredAppState == AppState.Working && distractionDetected == false)
+            if (RequiredAppState == AppState.Working && !_distractionDetected)
             {
-                string currentWindow = activityTrackerFeature.ActiveWindow;
-                if (DistractionApps.ContainsKey(currentWindow))
-                {
-                    DistractionApps[currentWindow]++;
-                }
-                else
-                {
-                    DistractionApps.Add(currentWindow, 1);
-                }
+                var currentWindow = _activityTracker.ActiveWindow;
+                _distractionApps[currentWindow] = _distractionApps.GetValueOrDefault(currentWindow) + 1;
                 DistractionsCount++;
-                Distractions = DistractionApps.OrderByDescending(kv => kv.Value).Take(3).Select((pair) => pair.Key).ToArray();
-                OnDataUpdated.Invoke();
-                distractionDetected = true;
+                Distractions = _distractionApps.OrderByDescending(pair => pair.Value).Take(3).Select(pair => pair.Key).ToArray();
+                OnDataUpdated?.Invoke();
+                _distractionDetected = true;
             }
 
-            soundService.PlaySound(ISoundService.SoundType.Warning);
+            _soundService.PlaySound(SoundType.Warning);
         }
 
         private void PunishUser()
         {
-            if(warnings >= MaxWarnings)
+            if (_warnings >= MaxWarnings)
             {
                 MinimizeApps();
-                warnings = 0;
+                _warnings = 0;
                 return;
             }
 
             WarnUser();
-            warnings++;
+            _warnings++;
         }
 
         private void MinimizeApps()
         {
             try
             {
-                lowLevelHandler.MinimizeAllApps();
-                soundService.PlaySound(ISoundService.SoundType.Termination);
+                _lowLevelHandler.MinimizeAllApps();
+                _soundService.PlaySound(SoundType.Termination);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                Log.Error(ex.Message);
+                Log.Error(ex, "Failed to minimize the apps");
             }
         }
     }

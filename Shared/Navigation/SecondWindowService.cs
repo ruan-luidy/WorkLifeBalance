@@ -1,49 +1,48 @@
-﻿using System.Threading.Tasks;
+using System.Windows;
 using WorkLifeBalance.Shared.Data;
+
 namespace WorkLifeBalance.Shared.Navigation
 {
     public class SecondWindowService : WindowServiceBase<SecondWindowPageBase>, IWindowService<SecondWindowPageBase>
     {
-        private readonly DataStorageFeature dataStorageFeature;
-        
-        public SecondWindowService(INavigationService navigation, DataStorageFeature dataStorageFeature) : base(navigation)
-        {
-            this.dataStorageFeature = dataStorageFeature;
-        }
-        
-        public override async Task OpenWith<TVm>(object? args = null)
-        {
-            if (dataStorageFeature.IsClosingApp) return;
+        private readonly DataStorageFeature _dataStorage;
 
-            SecondWindowPageBase loading = (SecondWindowPageBase)navigationService.NavigateTo<LoadingViewModel>();
-            
-            if(activePage != null)
+        public SecondWindowService(INavigationService navigationService, DataStorageFeature dataStorage)
+            : base(navigationService)
+        {
+            _dataStorage = dataStorage;
+        }
+
+        public override async Task OpenWith<TViewModel>(object? args = null)
+        {
+            if (_dataStorage.IsClosingApp)
+                return;
+
+            var loading = (SecondWindowPageBase)NavigationService.NavigateTo<LoadingViewModel>();
+            if (ActivePage != null)
             {
-                loading.PageWidth = activePage.PageWidth;
-                loading.PageHeight= activePage.PageHeight;
+                loading.PageWidth = ActivePage.PageWidth;
+                loading.PageHeight = ActivePage.PageHeight;
             }
 
             LoadedPage = loading;
-
             await Task.Delay(150);
-
             await ClearPage();
 
-            activePage = (SecondWindowPageBase)navigationService.NavigateTo<TVm>();
-
+            var page = (SecondWindowPageBase)NavigationService.NavigateTo<TViewModel>();
+            ActivePage = page;
             await Task.Run(async () =>
             {
-                await activePage.OnPageOpeningAsync(args);
-                App.Current.Dispatcher.Invoke(() =>
-                {
-                    LoadedPage = activePage;
-                });
+                await page.OnPageOpeningAsync(args);
+                Application.Current.Dispatcher.Invoke(() => LoadedPage = page);
             });
         }
 
         public override async Task Close()
         {
-            if (dataStorageFeature.IsClosingApp) return;
+            if (_dataStorage.IsClosingApp)
+                return;
+
             await ClearPage();
         }
     }

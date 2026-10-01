@@ -1,10 +1,11 @@
-﻿using System;
-using System.Threading.Tasks;
-namespace WorkLifeBalance.Shared.Navigation;
-
-public interface IWindowService<in T> where T: PageViewModelBase
+namespace WorkLifeBalance.Shared.Navigation
 {
-    Task Close();
-    Task OpenWith<Tvm>(object? args = null) where Tvm : PageViewModelBase;
-    Action? OnPageLoaded { get; set; }
+    public interface IWindowService<in T> where T : PageViewModelBase
+    {
+        Action? OnPageLoaded { get; set; }
+
+        Task Close();
+
+        Task OpenWith<TViewModel>(object? args = null) where TViewModel : PageViewModelBase;
+    }
 }

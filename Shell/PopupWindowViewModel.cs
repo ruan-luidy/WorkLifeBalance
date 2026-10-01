@@ -1,38 +1,34 @@
-﻿using System;
-using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using WorkLifeBalance.Shared.Navigation;
-namespace WorkLifeBalance.Shell;
 
-public partial class PopupWindowViewModel : NewWindowBase<PopupWindowPageBase>, IRecipient<PopupCloseMessage>
+namespace WorkLifeBalance.Shell
 {
-    public Action? OnShowView { get; set; } = () => { };
-    public Action? OnHideView { get; set; } = () => { };
-
-    public PopupWindowViewModel(IWindowService<PopupWindowPageBase> windowService) : base(windowService)
+    public partial class PopupWindowViewModel : NewWindowBase<PopupWindowPageBase>, IRecipient<PopupCloseMessage>
     {
-        windowService.OnPageLoaded += () =>
+        public PopupWindowViewModel(IWindowService<PopupWindowPageBase> windowService)
+            : base(windowService)
         {
-            if (!WeakReferenceMessenger.Default.IsRegistered<PopupCloseMessage>(this))
+            windowService.OnPageLoaded += () =>
             {
-                WeakReferenceMessenger.Default.Register(this);
-            }
+                if (!WeakReferenceMessenger.Default.IsRegistered<PopupCloseMessage>(this))
+                    WeakReferenceMessenger.Default.Register(this);
 
-            OnShowView?.Invoke();
-        };
-    }
-    
-    [RelayCommand]
-    protected override async Task CloseWindow()
-    {
-        WeakReferenceMessenger.Default.Unregister<PopupCloseMessage>(this);
-        await WindowService.Close();
-        OnHideView?.Invoke();
-    }
+                OnShowView?.Invoke();
+            };
+        }
 
-    public void Receive(PopupCloseMessage message)
-    {
-        CloseWindow();
+        public Action? OnShowView { get; set; } = () => { };
+        public Action? OnHideView { get; set; } = () => { };
+
+        public void Receive(PopupCloseMessage message) => _ = CloseWindow();
+
+        [RelayCommand]
+        protected override async Task CloseWindow()
+        {
+            WeakReferenceMessenger.Default.Unregister<PopupCloseMessage>(this);
+            await WindowService.Close();
+            OnHideView?.Invoke();
+        }
     }
 }

@@ -1,45 +1,42 @@
-﻿using Serilog;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
+using Serilog;
 using WorkLifeBalance.Shared.Data;
 using WorkLifeBalance.Shared.Scheduling;
 
 namespace WorkLifeBalance.Features.Tracking
 {
+    // Switches between Working and Resting depending on whether the focused window or page is marked as working
     public class StateCheckerFeature : FeatureBase
     {
+        private readonly DataStorageFeature _dataStorage;
+        private readonly ActivityTrackerFeature _activityTracker;
+        private readonly AppStateHandler _appStateHandler;
+
+        public StateCheckerFeature(DataStorageFeature dataStorage, ActivityTrackerFeature activityTracker, AppStateHandler appStateHandler)
+        {
+            _dataStorage = dataStorage;
+            _activityTracker = activityTracker;
+            _appStateHandler = appStateHandler;
+        }
+
         public bool IsFocusingOnWorkingWindow { get; set; }
         public bool IsFocusingOnWorkingPage { get; set; }
-        private readonly DataStorageFeature dataStorageFeature;
-        private readonly ActivityTrackerFeature activityTrackerFeature;
-        private readonly AppStateHandler appStateHandler;
 
-        public StateCheckerFeature(DataStorageFeature dataStorageFeature, ActivityTrackerFeature activityTrackerFeature, AppStateHandler appStateHandler)
-        {
-            this.dataStorageFeature = dataStorageFeature;
-            this.activityTrackerFeature = activityTrackerFeature;
-            this.appStateHandler = appStateHandler;
-        }
-
-        protected override Func<Task> ReturnFeatureMethod()
-        {
-            return TriggerWorkDetect;
-        }
+        protected override Func<Task> ReturnFeatureMethod() => TriggerWorkDetect;
 
         private async Task TriggerWorkDetect()
         {
-            if (IsFeatureRuning) return;
+            if (IsFeatureRunning)
+                return;
 
             try
             {
-                IsFeatureRuning = true;
-                await Task.Delay(dataStorageFeature.Settings.AutoDetectInterval * 1000, CancelTokenS.Token);
+                IsFeatureRunning = true;
+                await Task.Delay(_dataStorage.Settings.AutoDetectInterval * 1000, CancelTokenSource.Token);
                 CheckStateChange();
             }
             catch (TaskCanceledException taskCancel)
             {
-                Log.Information($"State Checker: {taskCancel.Message}");
+                Log.Information("State Checker: {Message}", taskCancel.Message);
             }
             catch (Exception ex)
             {
@@ -47,42 +44,30 @@ namespace WorkLifeBalance.Features.Tracking
             }
             finally
             {
-                IsFeatureRuning = false;
+                IsFeatureRunning = false;
             }
         }
 
         private void CheckStateChange()
         {
-            if (string.IsNullOrEmpty(activityTrackerFeature.ActiveWindow)) return;
+            if (string.IsNullOrEmpty(_activityTracker.ActiveWindow))
+                return;
 
-            IsFocusingOnWorkingWindow = dataStorageFeature.AutoChangeData.WorkingStateWindows.Contains(activityTrackerFeature.ActiveWindow);
-            IsFocusingOnWorkingPage =
-                dataStorageFeature.AutoChangeData.WorkingStateUrls.Contains(activityTrackerFeature.ActiveUrl);
-           
-            switch (appStateHandler.AppTimerState)
+            IsFocusingOnWorkingWindow = _dataStorage.AutoChangeData.WorkingStateWindows.Contains(_activityTracker.ActiveWindow);
+            IsFocusingOnWorkingPage = _dataStorage.AutoChangeData.WorkingStateUrls.Contains(_activityTracker.ActiveUrl);
+
+            switch (_appStateHandler.AppTimerState)
             {
                 case AppState.Working:
                     if (!IsFocusingOnWorkingWindow && !IsFocusingOnWorkingPage)
-                    {
-                        appStateHandler.SetAppState(AppState.Resting);
-                    }
+                        _appStateHandler.SetAppState(AppState.Resting);
                     break;
-
                 case AppState.Resting:
                     if (IsFocusingOnWorkingWindow || IsFocusingOnWorkingPage)
-                    {
-                        appStateHandler.SetAppState(AppState.Working);
-                    }
+                        _appStateHandler.SetAppState(AppState.Working);
                     break;
                 case AppState.Idle:
-                    if (IsFocusingOnWorkingWindow)
-                    {
-                        appStateHandler.SetAppState(AppState.Working);
-                    }
-                    else
-                    {
-                        appStateHandler.SetAppState(AppState.Resting);
-                    }
+                    _appStateHandler.SetAppState(IsFocusingOnWorkingWindow ? AppState.Working : AppState.Resting);
                     break;
             }
         }

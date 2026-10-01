@@ -1,14 +1,16 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-namespace WorkLifeBalance.Shared.Navigation;
+using CommunityToolkit.Mvvm.ComponentModel;
 
-public abstract partial class PopupWindowPageBase : PageViewModelBase
+namespace WorkLifeBalance.Shared.Navigation
 {
-    [ObservableProperty]
-    private double pageWidth = 260;
-        
-    [ObservableProperty]
-    private double pageHeight = 360;
-        
-    [ObservableProperty]
-    private string pageName = "Page";
+    public abstract partial class PopupWindowPageBase : PageViewModelBase
+    {
+        [ObservableProperty]
+        private double _pageWidth = 260;
+
+        [ObservableProperty]
+        private double _pageHeight = 360;
+
+        [ObservableProperty]
+        private string _pageName = "Page";
+    }
 }

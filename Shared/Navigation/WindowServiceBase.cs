@@ -1,44 +1,40 @@
-﻿using System;
-using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
-namespace WorkLifeBalance.Shared.Navigation;
 
-public abstract partial class WindowServiceBase<T> : ObservableObject where T : PageViewModelBase
+namespace WorkLifeBalance.Shared.Navigation
 {
-    protected readonly INavigationService navigationService;
-    public Action? OnPageLoaded { get; set; } = new(() => { });
-    
-    [ObservableProperty] 
-    protected T? loadedPage;
-
-    protected T? activePage;
-
-    protected WindowServiceBase(INavigationService navigation)
+    public abstract partial class WindowServiceBase<T> : ObservableObject where T : PageViewModelBase
     {
-        this.navigationService = navigation;
-    }
+        protected readonly INavigationService NavigationService;
 
-    partial void OnLoadedPageChanged(T? oldValue, T? newValue)
-    {
-        if (newValue != null)
+        [ObservableProperty]
+        private T? _loadedPage;
+
+        protected WindowServiceBase(INavigationService navigationService)
         {
-            OnPageLoaded?.Invoke();
+            NavigationService = navigationService;
         }
-    }
-    
-    public abstract Task OpenWith<TVm>(object? args = null) where TVm : PageViewModelBase;
 
-    public virtual async Task Close()
-    {
-        await ClearPage();
-    }
-    
-    protected virtual async Task ClearPage()
-    {
-        if (activePage != null)
+        public Action? OnPageLoaded { get; set; } = () => { };
+
+        protected T? ActivePage { get; set; }
+
+        public abstract Task OpenWith<TViewModel>(object? args = null) where TViewModel : PageViewModelBase;
+
+        public virtual async Task Close() => await ClearPage();
+
+        protected virtual async Task ClearPage()
         {
-            await activePage.OnPageClosingAsync();
-            activePage = null;
+            if (ActivePage != null)
+            {
+                await ActivePage.OnPageClosingAsync();
+                ActivePage = null;
+            }
+        }
+
+        partial void OnLoadedPageChanged(T? value)
+        {
+            if (value != null)
+                OnPageLoaded?.Invoke();
         }
     }
 }

@@ -1,72 +1,64 @@
-﻿using System;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
+
 namespace WorkLifeBalance.Shell
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
-    /// 
     public partial class MainWindow : Window, IDisposable
     {
-        private readonly MainViewModel ViewModel;
-        private readonly NotifyIcon NotifyIcon;
+        private readonly MainViewModel _viewModel;
+        private readonly NotifyIcon _notifyIcon;
 
         public MainWindow(MainViewModel viewModel)
         {
             Topmost = true;
-            ViewModel = viewModel;
-            DataContext = viewModel;
-            NotifyIcon = new NotifyIcon
-            {
-                Icon = System.Drawing.Icon.ExtractAssociatedIcon(Assembly.GetExecutingAssembly().Location)
-            };
-            NotifyIcon.Click += OnNotifyIconOnClick;
+            DataContext = _viewModel = viewModel;
+
+            _notifyIcon = new NotifyIcon { Icon = System.Drawing.Icon.ExtractAssociatedIcon(Assembly.GetExecutingAssembly().Location) };
+            _notifyIcon.Click += OnNotifyIconClick;
+
             SetStartUpLocation();
             InitializeComponent();
         }
 
+        public void Dispose()
+        {
+            _notifyIcon.Dispose();
+            GC.SuppressFinalize(this);
+        }
+
+        // bottom left corner of the main screen
         private void SetStartUpLocation()
         {
-            int ScreenHeight = (int)SystemParameters.PrimaryScreenHeight;
             Left = 0;
-            Top = ScreenHeight - 297;
+            Top = (int)SystemParameters.PrimaryScreenHeight - 297;
         }
 
         private void MoveWindow(object sender, MouseButtonEventArgs e)
         {
             if (e.LeftButton == MouseButtonState.Pressed)
-            {
                 DragMove();
-            }
         }
 
-        private void OnNotifyIconOnClick(object? sender, EventArgs args)
+        private void OnNotifyIconClick(object? sender, EventArgs e)
         {
             Show();
             WindowState = WindowState.Normal;
-            NotifyIcon.Visible = false;
+            _notifyIcon.Visible = false;
         }
 
         private void HideWindow(object sender, RoutedEventArgs e)
         {
-            if (ViewModel.MinimizeToTray)
+            if (_viewModel.MinimizeToTray)
             {
                 Hide();
-                NotifyIcon.Visible = true;
+                _notifyIcon.Visible = true;
             }
             else
             {
                 WindowState = WindowState.Minimized;
             }
-        }
-
-        public void Dispose()
-        {
-            NotifyIcon.Dispose();
-            GC.SuppressFinalize(this);
         }
     }
 }

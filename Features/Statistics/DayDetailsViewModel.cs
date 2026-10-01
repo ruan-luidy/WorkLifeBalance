@@ -1,68 +1,57 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using WorkLifeBalance.Shared.Data;
 using WorkLifeBalance.Shared.Navigation;
+
 namespace WorkLifeBalance.Features.Statistics
 {
     public partial class DayDetailsViewModel : SecondWindowPageBase
     {
-        [ObservableProperty]
-        private ProcessActivityData[]? processActivities;
+        private readonly IWindowService<SecondWindowPageBase> _secondWindowService;
+        private readonly StatisticsStore _store;
 
         [ObservableProperty]
-        private PageActivityData[]? pageActivities;
-        
-        [ObservableProperty]
-        private DayData? loadedDayData;
+        private ProcessActivityData[]? _processActivities;
 
-        private int LoadedPageType;
-        private IWindowService<SecondWindowPageBase> secondWindowService;
-        private StatisticsRepository database;
-        public DayDetailsViewModel(IWindowService<SecondWindowPageBase> secondWindowService, StatisticsRepository database)
+        [ObservableProperty]
+        private PageActivityData[]? _pageActivities;
+
+        [ObservableProperty]
+        private DayData? _loadedDayData;
+
+        private DaysRange _range;
+
+        public DayDetailsViewModel(IWindowService<SecondWindowPageBase> secondWindowService, StatisticsStore store)
         {
+            _secondWindowService = secondWindowService;
+            _store = store;
             PageHeight = 440;
             PageWidth = 630;
             PageName = "View Day Details";
-            this.secondWindowService = secondWindowService;
-            this.database = database;
         }
 
-        private async Task RequestData()
+        public override Task OnPageOpeningAsync(object? args = null)
         {
-            List<ProcessActivityData> RequestedActivity = (await database.ReadProcessDayActivity(LoadedDayData!.Date));
-            List<PageActivityData> RequestedPageActivity = (await database.ReadUrlDayActivity(LoadedDayData!.Date));
-            
-            ProcessActivities = RequestedActivity.OrderByDescending(data => data.TimeSpentC).ToArray();
-            PageActivities = RequestedPageActivity.OrderByDescending(data => data.TimeSpentC).ToArray();
-        }
-
-        public override Task OnPageClosingAsync() => Task.CompletedTask;
-
-        public override Task OnPageOpeningAsync(object? args)
-        {
-            if (args != null)
+            if (args is (DaysRange range, DayData day))
             {
-                if (args is (int loadedpagetype, DayData day))
-                {
-                    LoadedPageType = loadedpagetype;
-                    LoadedDayData = day;
-                    PageName = $"{LoadedDayData.DateC.ToString("MM/dd/yyyy")} Activity";
-                    _ = RequestData();
-                    return Task.CompletedTask;
-                }
+                _range = range;
+                LoadedDayData = day;
+                PageName = $"{day.DateC:MM/dd/yyyy} Activity";
+                _ = RequestData(day);
             }
 
-            //MainWindow.ShowErrorBox("Error ViewDayDetails", "Requested ViewDayDetails Page with no/wrong arguments");
             return Task.CompletedTask;
         }
 
-        [RelayCommand]
-        private void BackToViewDaysPage()
+        private async Task RequestData(DayData day)
         {
-            secondWindowService.OpenWith<DaysViewModel>(LoadedPageType);
+            var processes = await _store.ReadProcessDayActivity(day.Date);
+            var pages = await _store.ReadUrlDayActivity(day.Date);
+            ProcessActivities = processes.OrderByDescending(activity => activity.TimeSpentC).ToArray();
+            PageActivities = pages.OrderByDescending(activity => activity.TimeSpentC).ToArray();
         }
+
+        [RelayCommand]
+        private void BackToViewDaysPage() => _secondWindowService.OpenWith<DaysViewModel>(_range);
     }
 }
