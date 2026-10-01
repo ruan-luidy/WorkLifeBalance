@@ -5,6 +5,8 @@
     <TargetFramework>net8.0-windows7.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Runs on a newer .NET (9, 10...) when the 8 runtime is not installed -->
+    <RollForward>Major</RollForward>
     <UseWPF>true</UseWPF>
     <!-- NotifyIcon (minimize to tray) comes from Windows Forms -->
     <UseWindowsForms>true</UseWindowsForms>
