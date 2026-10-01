@@ -73,6 +73,8 @@ namespace WorkLifeBalance.Features.Statistics
             {
                 case DaysRange.All:
                     days = await _store.ReadMonth();
+                    PageWidth = 600;
+                    PageHeight = 500;
                     PageName = "All Months Days";
                     break;
                 case DaysRange.CurrentMonth:

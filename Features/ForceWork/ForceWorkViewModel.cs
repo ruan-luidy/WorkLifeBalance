@@ -76,6 +76,8 @@ namespace WorkLifeBalance.Features.ForceWork
             _forceWorkFeature = forceWorkFeature;
             _secondWindowService = secondWindowService;
             _featuresService = featuresService;
+            PageWidth = 380;
+            PageHeight = 420;
             PageName = "Force Work";
         }
 

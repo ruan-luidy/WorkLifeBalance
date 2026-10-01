@@ -36,6 +36,8 @@ namespace WorkLifeBalance.Features.Settings
         {
             _dataStorage = dataStorage;
             _startupTask = startupTask;
+            PageWidth = 320;
+            PageHeight = 290;
             PageName = "Settings";
             InitializeData();
         }

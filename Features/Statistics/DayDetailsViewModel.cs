@@ -20,6 +20,8 @@ namespace WorkLifeBalance.Features.Statistics
         public DayDetailsViewModel(StatisticsStore store)
         {
             _store = store;
+            PageWidth = 640;
+            PageHeight = 450;
             PageName = "View Day Details";
         }
 

@@ -19,6 +19,8 @@ namespace WorkLifeBalance.Features.Options
         {
             _secondWindowService = secondWindowService;
             _lowLevelHandler = lowLevelHandler;
+            PageWidth = 320;
+            PageHeight = 380;
             PageName = "Options";
         }
 

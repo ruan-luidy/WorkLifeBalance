@@ -22,6 +22,8 @@ namespace WorkLifeBalance.Features.Updates
         public UpdateViewModel(LowLevelHandler lowLevelHandler)
         {
             _lowLevelHandler = lowLevelHandler;
+            PageWidth = 340;
+            PageHeight = 400;
             PageName = "Update Available";
         }
 

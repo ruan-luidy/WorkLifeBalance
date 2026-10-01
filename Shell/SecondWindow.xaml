@@ -7,8 +7,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:shell="clr-namespace:WorkLifeBalance.Shell"
     Title="WorkLifeBalance"
-    Width="700"
-    Height="560"
+    Width="740"
+    Height="580"
     d:DataContext="{d:DesignInstance Type=shell:SecondWindowViewModel}"
     AllowsTransparency="True"
     Background="Transparent"
@@ -24,8 +24,17 @@
             Modifiers="Alt" />
     </Window.InputBindings>
 
-    <!--  The margin leaves room for the shadow, the window cuts anything outside it  -->
-    <Grid Margin="16">
+    <!--
+        The window has the size of the biggest page and the card animates to the size of each page (SecondWindow.xaml.cs).
+        The margin leaves room for the shadow, the window cuts anything outside it. Clicks go through the empty part.
+    -->
+    <Grid
+        x:Name="Card"
+        Width="320"
+        Height="320"
+        Margin="16"
+        HorizontalAlignment="Left"
+        VerticalAlignment="Top">
         <Border Style="{StaticResource CardShadow}" />
         <Border Padding="0" Style="{StaticResource SurfaceCard}">
             <DockPanel>
