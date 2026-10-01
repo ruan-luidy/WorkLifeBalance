@@ -3,7 +3,7 @@ using System.Windows.Controls;
 
 namespace WorkLifeBalance.Shared.Controls
 {
-    // Hours and minutes in one field ("1 h 30 min"); the popup has a grid for each. Picking the minutes closes it.
+    // Hours and minutes in one field ("1 h 30 min"); the popup has a wheel for each, like the iOS time picker
     public partial class DurationField : UserControl
     {
         public static readonly IReadOnlyList<PickerOption> HourOptions = PickerOption.Numbers(Enumerable.Range(0, 13));
@@ -46,7 +46,5 @@ namespace WorkLifeBalance.Shared.Controls
             else
                 Label.Text = $"{Hours} h {Minutes} min";
         }
-
-        private void OnMinutesPicked(object? sender, EventArgs e) => Toggle.IsChecked = false;
     }
 }

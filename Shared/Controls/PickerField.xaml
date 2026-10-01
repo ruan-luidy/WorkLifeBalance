@@ -22,7 +22,7 @@
             PopupAnimation="Fade"
             StaysOpen="False">
             <!--  The margin leaves room for the shadow, the popup cuts anything outside it  -->
-            <Grid Margin="0,4,14,16">
+            <Grid Margin="0,8,14,16">
                 <Border Style="{StaticResource CardShadow}" />
                 <Border Padding="6" Style="{StaticResource SurfaceCard}">
                     <controls:GridPicker

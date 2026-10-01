@@ -22,34 +22,25 @@
             PopupAnimation="Fade"
             StaysOpen="False">
             <!--  The margin leaves room for the shadow, the popup cuts anything outside it  -->
-            <Grid Margin="0,4,14,16">
+            <Grid Margin="0,8,14,16">
                 <Border Style="{StaticResource CardShadow}" />
-                <Border Padding="10,8" Style="{StaticResource SurfaceCard}">
+                <Border Padding="12,8" Style="{StaticResource SurfaceCard}">
                     <StackPanel Orientation="Horizontal">
                         <StackPanel>
                             <TextBlock
-                                Margin="2,0,0,4"
+                                Margin="0,0,0,4"
+                                HorizontalAlignment="Center"
                                 Style="{StaticResource StatLabel}"
                                 Text="HOURS" />
-                            <controls:GridPicker
-                                Columns="4"
-                                Options="{x:Static controls:DurationField.HourOptions}"
-                                SelectedValue="{Binding Hours, ElementName=Root}" />
+                            <controls:WheelPicker Options="{x:Static controls:DurationField.HourOptions}" SelectedValue="{Binding Hours, ElementName=Root}" />
                         </StackPanel>
-                        <Border
-                            Width="1"
-                            Margin="10,0"
-                            Background="{DynamicResource BorderBrush}" />
-                        <StackPanel>
+                        <StackPanel Margin="8,0,0,0">
                             <TextBlock
-                                Margin="2,0,0,4"
+                                Margin="0,0,0,4"
+                                HorizontalAlignment="Center"
                                 Style="{StaticResource StatLabel}"
                                 Text="MINUTES" />
-                            <controls:GridPicker
-                                Columns="4"
-                                Options="{x:Static controls:DurationField.MinuteOptions}"
-                                Picked="OnMinutesPicked"
-                                SelectedValue="{Binding Minutes, ElementName=Root}" />
+                            <controls:WheelPicker Options="{x:Static controls:DurationField.MinuteOptions}" SelectedValue="{Binding Minutes, ElementName=Root}" />
                         </StackPanel>
                     </StackPanel>
                 </Border>
