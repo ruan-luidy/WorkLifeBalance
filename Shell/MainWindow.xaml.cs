@@ -9,6 +9,7 @@ namespace WorkLifeBalance.Shell
     {
         private readonly MainViewModel _viewModel;
         private readonly NotifyIcon _notifyIcon;
+        private GenieEffect? _genie;
 
         public MainWindow(MainViewModel viewModel)
         {
@@ -20,6 +21,7 @@ namespace WorkLifeBalance.Shell
 
             SetStartUpLocation();
             InitializeComponent();
+            Loaded += (_, _) => _genie = new GenieEffect(Body, Root);
         }
 
         public void Dispose()
@@ -47,6 +49,13 @@ namespace WorkLifeBalance.Shell
             WindowState = WindowState.Normal;
             _notifyIcon.Visible = false;
         }
+
+        private void OnCollapseToggleUnchecked(object sender, RoutedEventArgs e) => _genie?.Collapse(ToggleBounds());
+
+        private void OnCollapseToggleChecked(object sender, RoutedEventArgs e) => _genie?.Expand(ToggleBounds());
+
+        private Rect ToggleBounds() =>
+            new(CollapseToggle.TranslatePoint(new Point(), Root), new Size(CollapseToggle.ActualWidth, CollapseToggle.ActualHeight));
 
         private void HideWindow(object sender, RoutedEventArgs e)
         {

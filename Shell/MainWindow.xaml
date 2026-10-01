@@ -62,11 +62,8 @@
         </Style>
     </Window.Resources>
 
-    <Grid>
-        <Grid x:Name="AnimatedGrid" RenderTransformOrigin="0,1">
-            <Grid.RenderTransform>
-                <ScaleTransform ScaleX="1" ScaleY="1" />
-            </Grid.RenderTransform>
+    <Grid x:Name="Root">
+        <Grid x:Name="Body">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="370" />
                 <ColumnDefinition Width="*" />
@@ -121,8 +118,17 @@
                             </StackPanel>
                         </Grid>
 
-                        <Grid Margin="18,6,0,0" DockPanel.Dock="Bottom">
-                            <Button Command="{Binding ToggleForceStateCommand}" Style="{StaticResource ToolbarButton}">
+                        <DockPanel Margin="18,6,0,0" DockPanel.Dock="Bottom">
+                            <TextBlock
+                                Margin="12,0,0,0"
+                                VerticalAlignment="Center"
+                                DockPanel.Dock="Right"
+                                Style="{StaticResource CaptionText}"
+                                Text="{Binding DateText}" />
+                            <Button
+                                HorizontalAlignment="Left"
+                                Command="{Binding ToggleForceStateCommand}"
+                                Style="{StaticResource ToolbarButton}">
                                 <StackPanel Orientation="Horizontal">
                                     <Path
                                         Width="11"
@@ -134,12 +140,7 @@
                                     <TextBlock Text="Force state" />
                                 </StackPanel>
                             </Button>
-                            <TextBlock
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Center"
-                                Style="{StaticResource CaptionText}"
-                                Text="{Binding DateText}" />
-                        </Grid>
+                        </DockPanel>
 
                         <StackPanel VerticalAlignment="Center">
                             <Border Style="{StaticResource TimeRow}" Tag="Working">
@@ -189,16 +190,19 @@
             </Grid>
         </Grid>
 
-        <!--  Collapses the window to this button; colored by the current state  -->
+        <!--  Collapses the window into this button (GenieEffect); colored by the current state  -->
         <ToggleButton
+            x:Name="CollapseToggle"
             Width="38"
             Height="38"
             Margin="10,0,0,10"
             HorizontalAlignment="Left"
             VerticalAlignment="Bottom"
             Cursor="Hand"
+            Checked="OnCollapseToggleChecked"
             IsChecked="True"
-            ToolTip="Show / hide">
+            ToolTip="Show / hide"
+            Unchecked="OnCollapseToggleUnchecked">
             <ToggleButton.Template>
                 <ControlTemplate TargetType="ToggleButton">
                     <Grid>
@@ -230,44 +234,6 @@
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </ToggleButton.Template>
-            <ToggleButton.Triggers>
-                <EventTrigger RoutedEvent="ToggleButton.Checked">
-                    <BeginStoryboard>
-                        <Storyboard>
-                            <DoubleAnimation
-                                Storyboard.TargetName="AnimatedGrid"
-                                Storyboard.TargetProperty="RenderTransform.ScaleX"
-                                From="0"
-                                To="1"
-                                Duration="0:0:0.2" />
-                            <DoubleAnimation
-                                Storyboard.TargetName="AnimatedGrid"
-                                Storyboard.TargetProperty="RenderTransform.ScaleY"
-                                From="0"
-                                To="1"
-                                Duration="0:0:0.2" />
-                        </Storyboard>
-                    </BeginStoryboard>
-                </EventTrigger>
-                <EventTrigger RoutedEvent="ToggleButton.Unchecked">
-                    <BeginStoryboard>
-                        <Storyboard>
-                            <DoubleAnimation
-                                Storyboard.TargetName="AnimatedGrid"
-                                Storyboard.TargetProperty="RenderTransform.ScaleX"
-                                From="1"
-                                To="0"
-                                Duration="0:0:0.2" />
-                            <DoubleAnimation
-                                Storyboard.TargetName="AnimatedGrid"
-                                Storyboard.TargetProperty="RenderTransform.ScaleY"
-                                From="1"
-                                To="0"
-                                Duration="0:0:0.2" />
-                        </Storyboard>
-                    </BeginStoryboard>
-                </EventTrigger>
-            </ToggleButton.Triggers>
         </ToggleButton>
     </Grid>
 </Window>
