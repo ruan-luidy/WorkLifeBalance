@@ -22,25 +22,20 @@
             Style="{StaticResource ToolbarButton}" />
 
         <StackPanel VerticalAlignment="Center">
-            <Border
-                Margin="0,8,0,10"
-                HorizontalAlignment="Left"
-                Style="{StaticResource StatePill}">
-                <StackPanel Orientation="Horizontal">
-                    <Path
-                        Width="10"
-                        Height="10"
-                        Margin="0,0,6,0"
-                        Data="{Binding RequiredAppState, Converter={StaticResource AppStateToIconConverter}}"
-                        Fill="{Binding RequiredAppState, Converter={StaticResource AppStateToBrushConverter}}"
-                        Stretch="Uniform" />
-                    <TextBlock
-                        FontSize="{StaticResource FontSize.XS}"
-                        FontWeight="SemiBold"
-                        Foreground="{DynamicResource PrimaryTextBrush}"
-                        Text="{Binding RequiredAppState}" />
-                </StackPanel>
-            </Border>
+            <StackPanel Margin="0,8,0,10" Orientation="Horizontal">
+                <Path
+                    Width="12"
+                    Height="12"
+                    Margin="0,0,6,0"
+                    Data="{Binding RequiredAppState, Converter={StaticResource AppStateToIconConverter}}"
+                    Fill="{Binding RequiredAppState, Converter={StaticResource AppStateToBrushConverter}}"
+                    Stretch="Uniform" />
+                <TextBlock
+                    VerticalAlignment="Center"
+                    FontWeight="SemiBold"
+                    Foreground="{DynamicResource PrimaryTextBrush}"
+                    Text="{Binding RequiredAppState}" />
+            </StackPanel>
 
             <TextBlock Style="{StaticResource StatLabel}" Text="NEXT STAGE IN" />
             <TextBlock Style="{StaticResource StatValue}" Text="{Binding CurrentStageTimeRemaining, Converter={StaticResource TimeOnlyToStringConverter}}" />

@@ -34,7 +34,7 @@
                 <ToggleButton
                     DockPanel.Dock="Right"
                     IsChecked="{Binding StartWithWin}"
-                    Style="{StaticResource ToggleButtonSwitch}" />
+                    Style="{StaticResource ToggleButtonSwitch.Small}" />
                 <TextBlock Style="{StaticResource SettingLabel}" Text="Start with Windows" />
             </DockPanel>
 
@@ -42,7 +42,7 @@
                 <ToggleButton
                     DockPanel.Dock="Right"
                     IsChecked="{Binding MinimizeToTray}"
-                    Style="{StaticResource ToggleButtonSwitch}" />
+                    Style="{StaticResource ToggleButtonSwitch.Small}" />
                 <TextBlock Style="{StaticResource SettingLabel}" Text="Minimize to tray" />
             </DockPanel>
 

@@ -94,7 +94,7 @@
         </Style.Triggers>
     </Style>
 
-    <!--  Tooltip: dark card instead of the Windows one  -->
+    <!--  Tooltip: dark card instead of the Windows one, no shadow (the popup would cut it)  -->
     <Style TargetType="ToolTip">
         <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
         <Setter Property="FontSize" Value="{StaticResource FontSize.Sm}" />
@@ -109,8 +109,7 @@
                         Background="{DynamicResource RegionBrush}"
                         BorderBrush="{DynamicResource BorderBrush}"
                         BorderThickness="1"
-                        CornerRadius="{StaticResource Radius.Sm}"
-                        Effect="{StaticResource Shadow.Card}">
+                        CornerRadius="{StaticResource Radius.Sm}">
                         <ContentPresenter TextBlock.TextAlignment="Left" />
                     </Border>
                 </ControlTemplate>

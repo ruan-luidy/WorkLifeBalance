@@ -72,129 +72,128 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <Border
-                Margin="16,10,6,18"
-                Padding="10,8,10,10"
-                Effect="{StaticResource Shadow.Card}"
-                Style="{StaticResource SurfaceCard}">
-                <DockPanel>
-                    <Grid
-                        Margin="2,0,0,8"
-                        Background="Transparent"
-                        DockPanel.Dock="Top"
-                        MouseDown="MoveWindow">
-                        <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
-                            <TextBlock Style="{StaticResource PanelHeaderText}" Text="WORKLIFEBALANCE" />
-                            <Border Margin="10,0,0,0" Style="{StaticResource StatePill}">
+            <!--  The margins leave room for the shadows, the window cuts anything outside it  -->
+            <Grid Margin="26,14,8,26">
+                <Border Style="{StaticResource CardShadow}" />
+                <Border Padding="10,8,10,10" Style="{StaticResource SurfaceCard}">
+                    <DockPanel>
+                        <Grid
+                            Margin="2,0,0,8"
+                            Background="Transparent"
+                            DockPanel.Dock="Top"
+                            MouseDown="MoveWindow">
+                            <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                                <TextBlock Style="{StaticResource PanelHeaderText}" Text="WORKLIFEBALANCE" />
+                                <Ellipse
+                                    Width="7"
+                                    Height="7"
+                                    Margin="12,0,6,0"
+                                    VerticalAlignment="Center"
+                                    Fill="{Binding AppState, Converter={StaticResource AppStateToBrushConverter}}" />
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    FontSize="{StaticResource FontSize.XS}"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource PrimaryTextBrush}"
+                                    Text="{Binding AppState}" />
+                            </StackPanel>
+                            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                                <Button
+                                    Command="{Binding OpenViewDataWindowCommand}"
+                                    Style="{StaticResource IconButton}"
+                                    Tag="{icons:Phosphor ChartBarBold}"
+                                    ToolTip="Data" />
+                                <Button
+                                    Command="{Binding OpenOptionsWindowCommand}"
+                                    Style="{StaticResource IconButton}"
+                                    Tag="{icons:Phosphor GearSixBold}"
+                                    ToolTip="Options" />
+                                <Button
+                                    Click="HideWindow"
+                                    Style="{StaticResource IconButton}"
+                                    Tag="{icons:Phosphor MinusBold}"
+                                    ToolTip="Minimize" />
+                                <Button
+                                    Command="{Binding CloseAppCommand}"
+                                    Style="{StaticResource IconButtonDanger}"
+                                    Tag="{icons:Phosphor XBold}"
+                                    ToolTip="Close" />
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid Margin="18,6,0,0" DockPanel.Dock="Bottom">
+                            <Button Command="{Binding ToggleForceStateCommand}" Style="{StaticResource ToolbarButton}">
                                 <StackPanel Orientation="Horizontal">
-                                    <Ellipse
-                                        Width="7"
-                                        Height="7"
+                                    <Path
+                                        Width="11"
+                                        Height="11"
                                         Margin="0,0,6,0"
-                                        VerticalAlignment="Center"
-                                        Fill="{Binding AppState, Converter={StaticResource AppStateToBrushConverter}}" />
-                                    <TextBlock
-                                        FontSize="{StaticResource FontSize.XS}"
-                                        FontWeight="SemiBold"
-                                        Foreground="{DynamicResource PrimaryTextBrush}"
-                                        Text="{Binding AppState}" />
+                                        Data="{icons:Phosphor HandBold}"
+                                        Fill="{DynamicResource SecondaryTextBrush}"
+                                        Stretch="Uniform" />
+                                    <TextBlock Text="Force state" />
                                 </StackPanel>
+                            </Button>
+                            <TextBlock
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Style="{StaticResource CaptionText}"
+                                Text="{Binding DateText}" />
+                        </Grid>
+
+                        <StackPanel VerticalAlignment="Center">
+                            <Border Style="{StaticResource TimeRow}" Tag="Working">
+                                <DockPanel>
+                                    <Path Style="{StaticResource TimeIcon}" />
+                                    <TextBlock
+                                        DockPanel.Dock="Right"
+                                        Style="{StaticResource TimeValue}"
+                                        Text="{Binding ElapsedWorkTime, Converter={StaticResource TimeOnlyToStringConverter}}" />
+                                    <TextBlock Style="{StaticResource TimeLabel}" Text="Worked" />
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource TimeRow}" Tag="Resting">
+                                <DockPanel>
+                                    <Path Style="{StaticResource TimeIcon}" />
+                                    <TextBlock
+                                        DockPanel.Dock="Right"
+                                        Style="{StaticResource TimeValue}"
+                                        Text="{Binding ElapsedRestTime, Converter={StaticResource TimeOnlyToStringConverter}}" />
+                                    <TextBlock Style="{StaticResource TimeLabel}" Text="Rested" />
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource TimeRow}" Tag="Idle">
+                                <DockPanel>
+                                    <Path Style="{StaticResource TimeIcon}" />
+                                    <TextBlock
+                                        DockPanel.Dock="Right"
+                                        Style="{StaticResource TimeValue}"
+                                        Text="{Binding ElapsedIdleTime, Converter={StaticResource TimeOnlyToStringConverter}}" />
+                                    <TextBlock Style="{StaticResource TimeLabel}" Text="Idle" />
+                                </DockPanel>
                             </Border>
                         </StackPanel>
-                        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
-                            <Button
-                                Command="{Binding OpenViewDataWindowCommand}"
-                                Style="{StaticResource IconButton}"
-                                Tag="{icons:Phosphor ChartBarBold}"
-                                ToolTip="Data" />
-                            <Button
-                                Command="{Binding OpenOptionsWindowCommand}"
-                                Style="{StaticResource IconButton}"
-                                Tag="{icons:Phosphor GearSixBold}"
-                                ToolTip="Options" />
-                            <Button
-                                Click="HideWindow"
-                                Style="{StaticResource IconButton}"
-                                Tag="{icons:Phosphor MinusBold}"
-                                ToolTip="Minimize" />
-                            <Button
-                                Command="{Binding CloseAppCommand}"
-                                Style="{StaticResource IconButtonDanger}"
-                                Tag="{icons:Phosphor XBold}"
-                                ToolTip="Close" />
-                        </StackPanel>
-                    </Grid>
-
-                    <Grid Margin="18,6,0,0" DockPanel.Dock="Bottom">
-                        <Button Command="{Binding ToggleForceStateCommand}" Style="{StaticResource ToolbarButton}">
-                            <StackPanel Orientation="Horizontal">
-                                <Path
-                                    Width="11"
-                                    Height="11"
-                                    Margin="0,0,6,0"
-                                    Data="{icons:Phosphor HandBold}"
-                                    Fill="{DynamicResource SecondaryTextBrush}"
-                                    Stretch="Uniform" />
-                                <TextBlock Text="Force state" />
-                            </StackPanel>
-                        </Button>
-                        <TextBlock
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Center"
-                            Style="{StaticResource CaptionText}"
-                            Text="{Binding DateText}" />
-                    </Grid>
-
-                    <StackPanel VerticalAlignment="Center">
-                        <Border Style="{StaticResource TimeRow}" Tag="Working">
-                            <DockPanel>
-                                <Path Style="{StaticResource TimeIcon}" />
-                                <TextBlock
-                                    DockPanel.Dock="Right"
-                                    Style="{StaticResource TimeValue}"
-                                    Text="{Binding ElapsedWorkTime, Converter={StaticResource TimeOnlyToStringConverter}}" />
-                                <TextBlock Style="{StaticResource TimeLabel}" Text="Worked" />
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource TimeRow}" Tag="Resting">
-                            <DockPanel>
-                                <Path Style="{StaticResource TimeIcon}" />
-                                <TextBlock
-                                    DockPanel.Dock="Right"
-                                    Style="{StaticResource TimeValue}"
-                                    Text="{Binding ElapsedRestTime, Converter={StaticResource TimeOnlyToStringConverter}}" />
-                                <TextBlock Style="{StaticResource TimeLabel}" Text="Rested" />
-                            </DockPanel>
-                        </Border>
-                        <Border Style="{StaticResource TimeRow}" Tag="Idle">
-                            <DockPanel>
-                                <Path Style="{StaticResource TimeIcon}" />
-                                <TextBlock
-                                    DockPanel.Dock="Right"
-                                    Style="{StaticResource TimeValue}"
-                                    Text="{Binding ElapsedIdleTime, Converter={StaticResource TimeOnlyToStringConverter}}" />
-                                <TextBlock Style="{StaticResource TimeLabel}" Text="Idle" />
-                            </DockPanel>
-                        </Border>
-                    </StackPanel>
-                </DockPanel>
-            </Border>
+                    </DockPanel>
+                </Border>
+            </Grid>
 
             <!--  Force State / Force Work panel  -->
-            <Border
+            <Grid
                 Grid.Column="1"
-                Margin="0,34,10,34"
-                Effect="{StaticResource Shadow.Card}"
-                Style="{StaticResource SurfaceCard}"
+                Margin="4,30,16,40"
                 Visibility="{Binding MainWindowDetailsService.LoadedPage, Converter={StaticResource NullToVisibilityConverter}}">
-                <ContentControl Content="{Binding MainWindowDetailsService.LoadedPage}" />
-            </Border>
+                <Border Style="{StaticResource CardShadow}" />
+                <Border Style="{StaticResource SurfaceCard}">
+                    <ContentControl Content="{Binding MainWindowDetailsService.LoadedPage}" />
+                </Border>
+            </Grid>
         </Grid>
 
         <!--  Collapses the window to this button; colored by the current state  -->
         <ToggleButton
             Width="38"
             Height="38"
+            Margin="10,0,0,10"
             HorizontalAlignment="Left"
             VerticalAlignment="Bottom"
             Cursor="Hand"
@@ -205,10 +204,18 @@
                     <Grid>
                         <Ellipse
                             x:Name="Disc"
-                            Effect="{StaticResource Shadow.Card}"
                             Fill="{Binding AppState, Converter={StaticResource AppStateToBrushConverter}}"
                             Stroke="{DynamicResource RegionBrush}"
-                            StrokeThickness="3" />
+                            StrokeThickness="3">
+                            <Ellipse.Effect>
+                                <DropShadowEffect
+                                    BlurRadius="8"
+                                    Direction="270"
+                                    Opacity="0.45"
+                                    ShadowDepth="2"
+                                    Color="Black" />
+                            </Ellipse.Effect>
+                        </Ellipse>
                         <Path
                             Width="16"
                             Height="16"

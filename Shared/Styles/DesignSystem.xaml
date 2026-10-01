@@ -8,7 +8,6 @@
 
     <CornerRadius x:Key="Radius.Sm">4</CornerRadius>
     <CornerRadius x:Key="Radius.Lg">8</CornerRadius>
-    <CornerRadius x:Key="Radius.Pill">999</CornerRadius>
 
     <system:Double x:Key="Toolbar.ControlHeight">24</system:Double>
 
@@ -38,15 +37,29 @@
     <SolidColorBrush x:Key="State.IdleBrush" Color="#e9af20" />
     <SolidColorBrush x:Key="Danger.Brush" Color="#db3340" />
 
+    <!--
+        Shadows only show inside the window, so a card needs at least 16 px (blur + depth) between it and the
+        window edge or the shadow gets cut.
+    -->
     <DropShadowEffect
         x:Key="Shadow.Card"
-        BlurRadius="18"
-        Direction="315"
-        Opacity="0.5"
-        ShadowDepth="4"
+        BlurRadius="12"
+        Direction="270"
+        Opacity="0.45"
+        ShadowDepth="3"
         Color="Black" />
 
     <!--  Cards  -->
+    <!--
+        The shadow goes on its own border behind the card: an Effect on the card itself also renders the text inside
+        it without ClearType. Put both in the same Grid cell.
+    -->
+    <Style x:Key="CardShadow" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource RegionBrush}" />
+        <Setter Property="CornerRadius" Value="{StaticResource Radius.Lg}" />
+        <Setter Property="Effect" Value="{StaticResource Shadow.Card}" />
+    </Style>
+
     <Style x:Key="SurfaceCard" TargetType="Border">
         <Setter Property="Background" Value="{DynamicResource RegionBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
@@ -119,14 +132,6 @@
         <Setter Property="TextWrapping" Value="Wrap" />
         <Setter Property="FontSize" Value="{StaticResource FontSize.Sm}" />
         <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
-    </Style>
-
-    <!--  State pill: colored dot + state name. The dot color goes in the Tag  -->
-    <Style x:Key="StatePill" TargetType="Border">
-        <Setter Property="Background" Value="{DynamicResource SecondaryRegionBrush}" />
-        <Setter Property="CornerRadius" Value="{StaticResource Radius.Pill}" />
-        <Setter Property="Padding" Value="8,2,10,2" />
-        <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
     <!--  Buttons  -->
@@ -277,13 +282,19 @@
         </Setter>
     </Style>
 
-    <!--  Inputs: every combo box gets the toolbar height  -->
+    <!--
+        Inputs: every combo box gets the toolbar height. It has to be based on the Small style with the content height
+        set too: the normal one keeps 30 px inside, and in a 24 px box the text and the bottom border get cut.
+    -->
     <Style
         x:Key="ToolbarComboBox"
-        BasedOn="{StaticResource {x:Type hc:ComboBox}}"
+        BasedOn="{StaticResource ComboBoxExtend.Small}"
         TargetType="{x:Type hc:ComboBox}">
         <Setter Property="Height" Value="{StaticResource Toolbar.ControlHeight}" />
         <Setter Property="MinHeight" Value="0" />
+        <Setter Property="hc:InfoElement.MinContentHeight" Value="0" />
+        <Setter Property="hc:InfoElement.ContentHeight" Value="{StaticResource Toolbar.ControlHeight}" />
+        <Setter Property="Padding" Value="6,0" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="FontSize" Value="{StaticResource FontSize.Sm}" />
         <Setter Property="FontFamily" Value="{StaticResource FontFamily.Numbers}" />
