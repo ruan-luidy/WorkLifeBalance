@@ -302,11 +302,6 @@
 
     <Style BasedOn="{StaticResource ToolbarComboBox}" TargetType="{x:Type hc:ComboBox}" />
 
-    <!--  The loading circle only spins while visible  -->
-    <Style BasedOn="{StaticResource {x:Type hc:LoadingCircle}}" TargetType="{x:Type hc:LoadingCircle}">
-        <Setter Property="IsRunning" Value="{Binding IsVisible, RelativeSource={RelativeSource Self}}" />
-    </Style>
-
     <!--  Dense table  -->
     <Style
         x:Key="TableColumnHeader"

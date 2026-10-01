@@ -4,9 +4,11 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:hc="https://handyorg.github.io/handycontrol">
 
-    <hc:LoadingCircle
-        Width="40"
-        Height="40"
+    <hc:CircleProgressBar
+        Width="50"
+        Height="50"
         HorizontalAlignment="Center"
-        VerticalAlignment="Center" />
+        VerticalAlignment="Center"
+        Background="Transparent"
+        IsIndeterminate="True" />
 </UserControl>
