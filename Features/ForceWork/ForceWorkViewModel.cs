@@ -12,12 +12,6 @@ namespace WorkLifeBalance.Features.ForceWork
         private readonly IFeaturesService _featuresService;
 
         [ObservableProperty]
-        private int[] _hours = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-
-        [ObservableProperty]
-        private int[] _minutes = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
-
-        [ObservableProperty]
         private int _totalWorkHours = 2;
 
         [ObservableProperty]
@@ -77,7 +71,7 @@ namespace WorkLifeBalance.Features.ForceWork
             _secondWindowService = secondWindowService;
             _featuresService = featuresService;
             PageWidth = 380;
-            PageHeight = 420;
+            PageHeight = 330;
             PageName = "Force Work";
         }
 

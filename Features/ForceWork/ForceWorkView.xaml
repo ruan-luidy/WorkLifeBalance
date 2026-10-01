@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:forceWork="clr-namespace:WorkLifeBalance.Features.ForceWork"
-    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:controls="clr-namespace:WorkLifeBalance.Shared.Controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     d:DataContext="{d:DesignInstance Type=forceWork:ForceWorkViewModel}"
     mc:Ignorable="d">
@@ -19,13 +19,6 @@
 
         <Style x:Key="FieldRow" TargetType="DockPanel">
             <Setter Property="Margin" Value="0,0,0,8" />
-        </Style>
-
-        <Style x:Key="TimeSeparator" TargetType="TextBlock">
-            <Setter Property="Margin" Value="4,0" />
-            <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
-            <Setter Property="Text" Value=":" />
         </Style>
     </UserControl.Resources>
 
@@ -49,80 +42,56 @@
             <!--  Not running: the timer settings  -->
             <StackPanel Visibility="{Binding IsFeatureActive, Converter={StaticResource BoolToCollapsedConverter}}">
                 <DockPanel Style="{StaticResource FieldRow}">
-                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                        <hc:ComboBox
-                            Width="54"
-                            ItemsSource="{Binding Hours}"
-                            SelectedItem="{Binding TotalWorkHours}" />
-                        <TextBlock Style="{StaticResource TimeSeparator}" />
-                        <hc:ComboBox
-                            Width="54"
-                            ItemsSource="{Binding Minutes}"
-                            SelectedItem="{Binding TotalWorkMinutes}" />
-                    </StackPanel>
+                    <controls:DurationField
+                        Width="120"
+                        DockPanel.Dock="Right"
+                        Hours="{Binding TotalWorkHours}"
+                        Minutes="{Binding TotalWorkMinutes}" />
                     <TextBlock Style="{StaticResource FieldLabel}" Text="Total work" />
                 </DockPanel>
 
                 <DockPanel Style="{StaticResource FieldRow}">
-                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                        <hc:ComboBox
-                            Width="54"
-                            ItemsSource="{Binding Hours}"
-                            SelectedItem="{Binding WorkHours}" />
-                        <TextBlock Style="{StaticResource TimeSeparator}" />
-                        <hc:ComboBox
-                            Width="54"
-                            ItemsSource="{Binding Minutes}"
-                            SelectedItem="{Binding WorkMinutes}" />
-                    </StackPanel>
+                    <controls:DurationField
+                        Width="120"
+                        DockPanel.Dock="Right"
+                        Hours="{Binding WorkHours}"
+                        Minutes="{Binding WorkMinutes}" />
                     <TextBlock Style="{StaticResource FieldLabel}" Text="Work" />
                 </DockPanel>
 
                 <DockPanel Style="{StaticResource FieldRow}">
-                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                        <hc:ComboBox
-                            Width="54"
-                            ItemsSource="{Binding Hours}"
-                            SelectedItem="{Binding RestHours}" />
-                        <TextBlock Style="{StaticResource TimeSeparator}" />
-                        <hc:ComboBox
-                            Width="54"
-                            ItemsSource="{Binding Minutes}"
-                            SelectedItem="{Binding RestMinutes}" />
-                    </StackPanel>
+                    <controls:DurationField
+                        Width="120"
+                        DockPanel.Dock="Right"
+                        Hours="{Binding RestHours}"
+                        Minutes="{Binding RestMinutes}" />
                     <TextBlock Style="{StaticResource FieldLabel}" Text="Rest" />
                 </DockPanel>
 
                 <DockPanel Style="{StaticResource FieldRow}">
-                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                        <hc:ComboBox
-                            Width="54"
-                            ItemsSource="{Binding Hours}"
-                            SelectedItem="{Binding LongRestHours}" />
-                        <TextBlock Style="{StaticResource TimeSeparator}" />
-                        <hc:ComboBox
-                            Width="54"
-                            ItemsSource="{Binding Minutes}"
-                            SelectedItem="{Binding LongRestMinutes}" />
-                    </StackPanel>
+                    <controls:DurationField
+                        Width="120"
+                        DockPanel.Dock="Right"
+                        Hours="{Binding LongRestHours}"
+                        Minutes="{Binding LongRestMinutes}" />
                     <TextBlock Style="{StaticResource FieldLabel}" Text="Long rest" />
                 </DockPanel>
 
                 <DockPanel Style="{StaticResource FieldRow}" ToolTip="Work stages before a long rest">
-                    <hc:ComboBox
-                        Width="54"
+                    <controls:NumberStepper
+                        Width="120"
                         DockPanel.Dock="Right"
-                        ItemsSource="{Binding Hours}"
-                        SelectedItem="{Binding LongRestInterval}" />
+                        Maximum="12"
+                        Value="{Binding LongRestInterval}" />
                     <TextBlock Style="{StaticResource FieldLabel}" Text="Long rest interval" />
                 </DockPanel>
 
                 <DockPanel Style="{StaticResource FieldRow}" ToolTip="Warnings before every window is minimized">
-                    <hc:ComboBox
-                        Width="54"
+                    <controls:NumberStepper
+                        Width="120"
                         DockPanel.Dock="Right"
-                        ItemsSource="{Binding Hours}"
-                        SelectedItem="{Binding MaxWarnings}" />
+                        Maximum="12"
+                        Value="{Binding MaxWarnings}" />
                     <TextBlock Style="{StaticResource FieldLabel}" Text="Max warnings" />
                 </DockPanel>
             </StackPanel>

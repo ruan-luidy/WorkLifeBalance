@@ -3,7 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:controls="clr-namespace:WorkLifeBalance.Shared.Controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:settings="clr-namespace:WorkLifeBalance.Features.Settings"
     d:DataContext="{d:DesignInstance Type=settings:SettingsViewModel}"
@@ -47,30 +47,36 @@
             </DockPanel>
 
             <DockPanel Style="{StaticResource SettingRow}" ToolTip="The interval of saving information in minutes">
-                <hc:ComboBox
-                    Width="64"
+                <controls:NumberStepper
+                    Width="110"
                     DockPanel.Dock="Right"
-                    ItemsSource="{Binding Numbers}"
-                    SelectedItem="{Binding AutoSaveInterval}" />
-                <TextBlock Style="{StaticResource SettingLabel}" Text="Save every (minutes)" />
+                    Maximum="300"
+                    Minimum="1"
+                    Suffix="min"
+                    Value="{Binding AutoSaveInterval}" />
+                <TextBlock Style="{StaticResource SettingLabel}" Text="Save every" />
             </DockPanel>
 
             <DockPanel Style="{StaticResource SettingRow}" ToolTip="The interval of detecting the active background window">
-                <hc:ComboBox
-                    Width="64"
+                <controls:NumberStepper
+                    Width="110"
                     DockPanel.Dock="Right"
-                    ItemsSource="{Binding Numbers}"
-                    SelectedItem="{Binding AutoDetectInterval}" />
-                <TextBlock Style="{StaticResource SettingLabel}" Text="Detect state (seconds)" />
+                    Maximum="300"
+                    Minimum="1"
+                    Suffix="s"
+                    Value="{Binding AutoDetectInterval}" />
+                <TextBlock Style="{StaticResource SettingLabel}" Text="Detect state every" />
             </DockPanel>
 
             <DockPanel Style="{StaticResource SettingRow}" ToolTip="The interval checking the mouse position for AFK">
-                <hc:ComboBox
-                    Width="64"
+                <controls:NumberStepper
+                    Width="110"
                     DockPanel.Dock="Right"
-                    ItemsSource="{Binding Numbers}"
-                    SelectedItem="{Binding AutoDetectIdleInterval}" />
-                <TextBlock Style="{StaticResource SettingLabel}" Text="Detect idle (minutes)" />
+                    Maximum="300"
+                    Minimum="1"
+                    Suffix="min"
+                    Value="{Binding AutoDetectIdleInterval}" />
+                <TextBlock Style="{StaticResource SettingLabel}" Text="Detect idle after" />
             </DockPanel>
         </StackPanel>
     </DockPanel>

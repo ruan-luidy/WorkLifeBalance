@@ -29,9 +29,6 @@ namespace WorkLifeBalance.Features.Settings
         [ObservableProperty]
         private bool _minimizeToTray;
 
-        [ObservableProperty]
-        private int[] _numbers = Enumerable.Range(1, 300).ToArray();
-
         public SettingsViewModel(DataStorageFeature dataStorage, StartupTask startupTask)
         {
             _dataStorage = dataStorage;

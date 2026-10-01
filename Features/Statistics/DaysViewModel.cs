@@ -1,6 +1,8 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using WorkLifeBalance.Shared.Controls;
 using WorkLifeBalance.Shared.Data;
 using WorkLifeBalance.Shared.Navigation;
 
@@ -19,25 +21,18 @@ namespace WorkLifeBalance.Features.Statistics
         private readonly StatisticsStore _store;
         private readonly DataStorageFeature _dataStorage;
 
-        [ObservableProperty]
-        private int[]? _filterDays;
-
+        // 0 means "any" in the three filters, which apply as soon as they change
         [ObservableProperty]
         private int _selectedDay;
-
-        [ObservableProperty]
-        private int[]? _filterMonths;
 
         [ObservableProperty]
         private int _selectedMonth;
 
         [ObservableProperty]
-        private int[]? _filterYears;
-
-        [ObservableProperty]
         private int _selectedYear;
 
         private DayData[] _allDays = [];
+        private bool _loading;
 
         public DaysViewModel(IWindowService<SecondWindowPageBase> secondWindowService, StatisticsStore store, DataStorageFeature dataStorage)
         {
@@ -46,8 +41,16 @@ namespace WorkLifeBalance.Features.Statistics
             _dataStorage = dataStorage;
             PageWidth = 600;
             PageHeight = 500;
-            SetFilterValues();
+            YearOptions = PickerOption.Numbers(Enumerable.Range(2021, dataStorage.TodayData.DateC.Year - 2020).Reverse().Prepend(0), "Any");
         }
+
+        public IReadOnlyList<PickerOption> DayOptions { get; } = PickerOption.Numbers(Enumerable.Range(0, 32), "Any");
+
+        public IReadOnlyList<PickerOption> MonthOptions { get; } = Enumerable.Range(0, 13)
+            .Select(month => new PickerOption(month, month == 0 ? "Any" : CultureInfo.InvariantCulture.DateTimeFormat.GetAbbreviatedMonthName(month)))
+            .ToList();
+
+        public IReadOnlyList<PickerOption> YearOptions { get; }
 
         public ObservableCollection<DayData> LoadedData { get; set; } = new();
 
@@ -55,14 +58,6 @@ namespace WorkLifeBalance.Features.Statistics
         {
             if (args is DaysRange range)
                 await RequestData(range);
-        }
-
-        // 0 means "any" in the three filters
-        private void SetFilterValues()
-        {
-            FilterDays = Enumerable.Range(0, 31).ToArray();
-            FilterMonths = Enumerable.Range(0, 13).ToArray();
-            FilterYears = Enumerable.Range(2021, _dataStorage.TodayData.DateC.Year - 2020).Reverse().Append(0).ToArray();
         }
 
         private async Task RequestData(DaysRange range)
@@ -87,9 +82,12 @@ namespace WorkLifeBalance.Features.Statistics
                     break;
             }
 
+            // Runs off the UI thread: resetting the filters must not touch the list on screen
+            _loading = true;
             SelectedMonth = 0;
             SelectedDay = 0;
             SelectedYear = 0;
+            _loading = false;
             days.Reverse();
             LoadedData = new ObservableCollection<DayData>(days);
             _allDays = days.ToArray();
@@ -102,9 +100,17 @@ namespace WorkLifeBalance.Features.Statistics
             _secondWindowService.OpenWith<DayDetailsViewModel>(day);
         }
 
-        [RelayCommand]
+        partial void OnSelectedDayChanged(int value) => ApplyFilters();
+
+        partial void OnSelectedMonthChanged(int value) => ApplyFilters();
+
+        partial void OnSelectedYearChanged(int value) => ApplyFilters();
+
         private void ApplyFilters()
         {
+            if (_loading)
+                return;
+
             IEnumerable<DayData> days = _allDays;
             if (SelectedMonth != 0)
                 days = days.Where(day => day.DateC.Month == SelectedMonth);

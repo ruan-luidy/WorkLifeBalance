@@ -1,0 +1,59 @@
+<UserControl
+    x:Class="WorkLifeBalance.Shared.Controls.DurationField"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:WorkLifeBalance.Shared.Controls"
+    x:Name="Root">
+
+    <Grid>
+        <ToggleButton
+            x:Name="Toggle"
+            IsHitTestVisible="{Binding IsOpen, ElementName=DropDown, Converter={StaticResource Boolean2BooleanReConverter}}"
+            Style="{StaticResource FieldToggle}">
+            <TextBlock x:Name="Label" FontFamily="{StaticResource FontFamily.Numbers}" />
+        </ToggleButton>
+
+        <Popup
+            x:Name="DropDown"
+            AllowsTransparency="True"
+            IsOpen="{Binding IsChecked, ElementName=Toggle}"
+            Placement="Bottom"
+            PlacementTarget="{Binding ElementName=Toggle}"
+            PopupAnimation="Fade"
+            StaysOpen="False">
+            <!--  The margin leaves room for the shadow, the popup cuts anything outside it  -->
+            <Grid Margin="0,4,14,16">
+                <Border Style="{StaticResource CardShadow}" />
+                <Border Padding="10,8" Style="{StaticResource SurfaceCard}">
+                    <StackPanel Orientation="Horizontal">
+                        <StackPanel>
+                            <TextBlock
+                                Margin="2,0,0,4"
+                                Style="{StaticResource StatLabel}"
+                                Text="HOURS" />
+                            <controls:GridPicker
+                                Columns="4"
+                                Options="{x:Static controls:DurationField.HourOptions}"
+                                SelectedValue="{Binding Hours, ElementName=Root}" />
+                        </StackPanel>
+                        <Border
+                            Width="1"
+                            Margin="10,0"
+                            Background="{DynamicResource BorderBrush}" />
+                        <StackPanel>
+                            <TextBlock
+                                Margin="2,0,0,4"
+                                Style="{StaticResource StatLabel}"
+                                Text="MINUTES" />
+                            <controls:GridPicker
+                                Columns="4"
+                                Options="{x:Static controls:DurationField.MinuteOptions}"
+                                Picked="OnMinutesPicked"
+                                SelectedValue="{Binding Minutes, ElementName=Root}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Popup>
+    </Grid>
+</UserControl>
