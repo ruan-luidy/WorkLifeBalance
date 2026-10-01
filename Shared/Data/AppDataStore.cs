@@ -31,9 +31,9 @@ namespace WorkLifeBalance.Shared.Data
             var data = new AutoStateChangeData
             {
                 ProcessActivities = (await _dataAccess.ReadDataAsync<ProcessActivityData, dynamic>(
-                    "SELECT Date, Process, TimeSpent FROM Activity WHERE Date = @Date", new { Date = date })).ToArray(),
+                    "SELECT Date, Process, TimeSpent FROM Activity WHERE Date = @Date AND Process IS NOT NULL", new { Date = date })).ToArray(),
                 PageActivities = (await _dataAccess.ReadDataAsync<PageActivityData, dynamic>(
-                    "SELECT Date, Url, TimeSpent FROM Activity WHERE Date = @Date", new { Date = date })).ToArray(),
+                    "SELECT Date, Url, TimeSpent FROM Activity WHERE Date = @Date AND Url IS NOT NULL", new { Date = date })).ToArray(),
                 WorkingStateWindows = (await _dataAccess.ReadDataAsync<string, dynamic>(
                     "SELECT WorkingStateWindows FROM WorkingWindows", new { })).ToArray(),
                 WorkingStateUrls = (await _dataAccess.ReadDataAsync<string, dynamic>(

@@ -62,7 +62,11 @@ namespace WorkLifeBalance.Features.Tracking
             return Task.CompletedTask;
         }
 
-        private void RecordActivityForProcess() => AddSecond(_dataStorage.AutoChangeData.ProcessActivitiesC, ActiveWindow);
+        private void RecordActivityForProcess()
+        {
+            if (!string.IsNullOrEmpty(ActiveWindow))
+                AddSecond(_dataStorage.AutoChangeData.ProcessActivitiesC, ActiveWindow);
+        }
 
         private void RecordActivityForPage()
         {

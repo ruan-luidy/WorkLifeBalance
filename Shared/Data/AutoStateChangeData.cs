@@ -16,16 +16,16 @@ namespace WorkLifeBalance.Shared.Data
         {
             try
             {
-                foreach (var activity in ProcessActivities)
+                foreach (var activity in ProcessActivities.Where(activity => !string.IsNullOrEmpty(activity.Process)))
                 {
                     activity.ConvertSaveDataToUsableData();
-                    ProcessActivitiesC.Add(activity.Process, activity.TimeSpentC);
+                    ProcessActivitiesC.TryAdd(activity.Process, activity.TimeSpentC);
                 }
 
-                foreach (var activity in PageActivities)
+                foreach (var activity in PageActivities.Where(activity => !string.IsNullOrEmpty(activity.Url)))
                 {
                     activity.ConvertSaveDataToUsableData();
-                    PageActivitiesC.Add(activity.Url!, activity.TimeSpentC);
+                    PageActivitiesC.TryAdd(activity.Url!, activity.TimeSpentC);
                 }
             }
             catch (Exception ex)
